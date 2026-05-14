@@ -398,3 +398,211 @@ Popup harus terasa:
 ### Actions
 
 - Take a Break
+<<<<<<< HEAD
+=======
+- Snooze
+- Continue Anyway
+
+Tone harus netral.
+
+Tidak menghakimi.
+
+---
+
+# 8. Dashboard Design
+
+## Dashboard Priorities
+
+Dashboard harus fokus pada:
+
+- clarity
+- simplicity
+- quick understanding
+
+Bukan dashboard penuh angka dan chart seperti cockpit pesawat.
+
+---
+
+## Recommended Sections
+
+### Today Usage Summary
+
+Menampilkan:
+
+- total screen time
+- warning count
+- longest session
+
+---
+
+### App Usage Cards
+
+Menampilkan:
+
+- app icon
+- app name
+- usage duration
+- progress indicator
+
+---
+
+### Weekly Trend
+
+Gunakan chart sederhana.
+
+Hindari:
+
+- chart overload
+- terlalu banyak warna
+- visual noise
+
+---
+
+# 9. Motion & Animation
+
+## Animation Philosophy
+
+Animasi harus subtle.
+
+Tujuan animasi:
+
+- membantu transisi
+- memberikan feedback
+- memperhalus experience
+
+Bukan untuk pamer.
+
+---
+
+## Recommended Motion
+
+- soft fade
+- slight scale
+- smooth slide
+- duration 150ms - 300ms
+
+Hindari:
+
+- bounce berlebihan
+- flashy transition
+- physics animation berlebihan
+- parallax aneh
+
+---
+
+# 10. UX Principles
+
+## 10.1 Low Friction
+
+Setup awal harus sesingkat mungkin.
+
+Permission flow harus:
+
+- jelas
+- step-by-step
+- tidak overwhelming
+
+---
+
+## 10.2 Non-Judgmental UX
+
+Jangan gunakan wording seperti:
+
+- “You are addicted”
+- “Stop wasting time”
+- “Too much screen time!”
+
+Gunakan tone yang lebih mindful dan netral.
+
+---
+
+## 10.3 Respect User Autonomy
+
+User tetap memiliki kontrol.
+
+Aplikasi tidak boleh terasa memaksa.
+
+Selalu berikan:
+
+- dismiss option
+- snooze option
+- customizable threshold
+
+---
+
+# 11. Accessibility
+
+## Readability
+
+- kontras cukup tinggi
+- font tidak terlalu kecil
+- spacing nyaman
+
+---
+
+## Touch Target
+
+Semua button minimal:
+
+- 44x44dp
+
+---
+
+## Color Dependency
+
+Jangan mengandalkan warna saja untuk menyampaikan informasi.
+
+---
+
+# 12. Design Inspirations
+
+## Inspiration Sources
+
+Vibe visual yang dijadikan referensi:
+
+- modern mindfulness apps
+- premium reading apps
+- clean habit trackers
+- minimalist journaling apps
+- editorial-style mobile UI
+
+---
+
+## Non-Inspirations
+
+Yang sengaja dihindari:
+
+- crypto app aesthetics
+- gamer UI
+- overly futuristic UI
+- glowing SaaS dashboards
+- productivity bro aesthetics
+
+---
+
+# 13. Design Keywords
+
+Kata kunci utama desain:
+
+- calm
+- grounded
+- breathable
+- mindful
+- warm
+- quiet
+- clean
+- mature
+- modern
+- intentional
+
+---
+
+# 14. Conclusion
+
+Design Doomscroll Guard dirancang untuk menjadi antitesis dari aplikasi media sosial modern yang penuh stimulasi visual.
+
+Aplikasi harus terasa seperti ruang tenang yang membantu pengguna berhenti sejenak dari endless scrolling.
+
+Pendekatan visual yang clean, warm, dan restrained dipilih agar pengalaman menggunakan aplikasi terasa nyaman dalam jangka panjang tanpa menciptakan visual fatigue tambahan.
+
+>>>>>>> 0f27eb3 (git init)

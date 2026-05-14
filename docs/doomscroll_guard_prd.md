@@ -378,3 +378,7 @@ Doomscroll Guard dirancang sebagai aplikasi lightweight digital wellbeing yang f
 Aplikasi tidak bertujuan melarang penggunaan media sosial, melainkan membantu pengguna meningkatkan kesadaran terhadap pola penggunaan digital mereka melalui monitoring dan reminder yang ringan namun efektif.
 
 Dengan pendekatan Android-native integration dan Flutter frontend, aplikasi diharapkan dapat memberikan solusi praktis terhadap masalah penggunaan media sosial berlebihan pada era modern.
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0f27eb3 (git init)

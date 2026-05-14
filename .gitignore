@@ -1,0 +1,35 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub/
+pubspec.lock
+build/
+
+# Android/Gradle
+android/.gradle/
+android/local.properties
+android/**/captures/
+android/**/build/
+*.apk
+*.aab
+
+# iOS (if added later)
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+
+# IDE/editor
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+
+# hehe
+docs/prompt.md

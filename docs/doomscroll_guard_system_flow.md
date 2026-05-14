@@ -336,3 +336,7 @@ UC30 ..> UC11 : <<extend>>
 - **State Diagram** menjelaskan perubahan status utama sistem selama aplikasi aktif.
 
 Diagram ini bisa langsung dipakai sebagai basis laporan atau disesuaikan lagi untuk versi final implementasi.
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0f27eb3 (git init)

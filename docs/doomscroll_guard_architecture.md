@@ -398,4 +398,170 @@ Native layer mengirim data ke Flutter untuk:
  │    ├── SessionManager
  │    ├── NotificationManager
  │    └── OverlayManager
+<<<<<<< HEAD
 ```
+=======
+ │
+ ├── channels
+ │    └── MethodChannelHandler
+ │
+ └── utils
+```
+
+---
+
+# 10. Permission Architecture
+
+## Required Permissions
+
+### Accessibility Service
+
+Digunakan untuk monitoring aktivitas aplikasi.
+
+---
+
+### Usage Access Permission
+
+Digunakan untuk membaca usage statistics.
+
+---
+
+### Overlay Permission
+
+Digunakan untuk menampilkan popup di atas aplikasi lain.
+
+---
+
+### Foreground Service Permission
+
+Digunakan untuk menjalankan monitoring background.
+
+---
+
+# 11. Error Handling Strategy
+
+## Permission Revoked
+
+Jika permission dicabut:
+
+- monitoring dihentikan
+- tampilkan warning ke user
+- arahkan user ke permission screen
+
+---
+
+## Service Killed
+
+Jika service dihentikan sistem:
+
+- coba recovery otomatis
+- tampilkan recovery notification
+- restart monitoring jika memungkinkan
+
+---
+
+## Overlay Failure
+
+Jika popup gagal muncul:
+
+- gunakan fallback notification
+- log error untuk debugging
+
+---
+
+# 12. Security & Privacy
+
+## Privacy Principles
+
+Aplikasi tidak mengumpulkan:
+
+- isi pesan pengguna
+- screenshot
+- data pribadi sensitif
+- data cloud
+- aktivitas keyboard
+
+Monitoring hanya fokus pada:
+
+- nama aplikasi aktif
+- durasi penggunaan
+- session timing
+
+---
+
+## Offline First
+
+Semua data disimpan secara lokal.
+
+Tidak ada server eksternal pada MVP.
+
+---
+
+# 13. Scalability Consideration
+
+Walaupun aplikasi merupakan MVP, arsitektur dirancang agar dapat berkembang.
+
+Potensi pengembangan:
+
+- AI adaptive reminders
+- cloud sync
+- analytics engine
+- wearable integration
+- multi-device monitoring
+
+---
+
+# 14. Architectural Risks
+
+## Android Fragmentation
+
+Behavior Android berbeda antar vendor.
+
+Contoh:
+
+- Xiaomi
+- Oppo
+- Vivo
+- Huawei
+
+Masing-masing memiliki kebijakan battery optimization berbeda.
+
+---
+
+## Background Restrictions
+
+Android modern semakin restriktif terhadap background service.
+
+Risiko:
+
+- service dihentikan
+- monitoring delay
+- overlay blocked
+
+---
+
+## User Trust
+
+Accessibility Service sering dianggap sensitif.
+
+Aplikasi harus:
+
+- transparan
+- jelas menjelaskan fungsi permission
+- tidak meminta akses yang tidak diperlukan
+
+---
+
+# 15. Conclusion
+
+Arsitektur Doomscroll Guard dirancang untuk menyeimbangkan:
+
+- lightweight monitoring
+- reliability
+- Android system integration
+- maintainability
+- scalability
+
+Dengan kombinasi Flutter dan native Android integration, aplikasi dapat menjalankan monitoring real-time tanpa mengorbankan fleksibilitas UI dan maintainability aplikasi.
+
+>>>>>>> 0f27eb3 (git init)
