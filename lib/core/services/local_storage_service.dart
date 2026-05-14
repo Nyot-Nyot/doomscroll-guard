@@ -67,8 +67,19 @@ class LocalStorageService {
     await _dailyUsageBox.put(key, usage);
   }
 
+  Future<void> saveTodayUsage(DailyUsage usage) async {
+    await saveDailyUsage(todayKey(), usage);
+  }
+
   Future<void> addUsageSession(String key, UsageSession session) async {
     await _sessionBox.put(key, session);
+  }
+
+  Future<void> addUsageSessionAuto(UsageSession session) async {
+    await addUsageSession(
+      createSessionKey(session.startTime, session.packageName),
+      session,
+    );
   }
 
   Future<void> seedIfEmpty() async {
@@ -100,8 +111,7 @@ class LocalStorageService {
     }
 
     if (_dailyUsageBox.isEmpty) {
-      await saveDailyUsage(
-        _todayKey(),
+      await saveTodayUsage(
         DailyUsage(
           date: DateTime.now(),
           usageSecondsByApp: const {
@@ -114,8 +124,15 @@ class LocalStorageService {
     }
   }
 
-  String _todayKey() {
-    final now = DateTime.now();
-    return "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+  String todayKey() {
+    return dailyKeyForDate(DateTime.now());
+  }
+
+  String dailyKeyForDate(DateTime date) {
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
+
+  String createSessionKey(DateTime startTime, String packageName) {
+    return "${startTime.millisecondsSinceEpoch}_$packageName";
   }
 }
