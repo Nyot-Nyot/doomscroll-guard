@@ -1,7 +1,9 @@
 import 'package:flutter/services.dart';
 
 class NativeBridge {
-  static const MethodChannel _channel = MethodChannel('doomscroll_guard/channel');
+  static const MethodChannel _channel = MethodChannel(
+    'doomscroll_guard/channel',
+  );
 
   Future<bool> startService() async {
     final result = await _channel.invokeMethod<bool>('startService');

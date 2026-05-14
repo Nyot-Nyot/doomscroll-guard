@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
+import 'package:flutter/material.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

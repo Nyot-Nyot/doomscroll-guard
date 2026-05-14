@@ -1,4 +1,3 @@
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../shared/models/daily_usage.dart';
@@ -48,8 +47,7 @@ class LocalStorageService {
       Hive.box<PermissionState>(_permissionsBoxName);
   Box<DailyUsage> get _dailyUsageBox =>
       Hive.box<DailyUsage>(_dailyUsageBoxName);
-  Box<UsageSession> get _sessionBox =>
-      Hive.box<UsageSession>(_sessionBoxName);
+  Box<UsageSession> get _sessionBox => Hive.box<UsageSession>(_sessionBoxName);
 
   Settings? getSettings() => _settingsBox.get(_settingsKey);
 
@@ -57,8 +55,7 @@ class LocalStorageService {
     await _settingsBox.put(_settingsKey, settings);
   }
 
-  PermissionState? getPermissionState() =>
-      _permissionsBox.get(_permissionKey);
+  PermissionState? getPermissionState() => _permissionsBox.get(_permissionKey);
 
   Future<void> savePermissionState(PermissionState state) async {
     await _permissionsBox.put(_permissionKey, state);
