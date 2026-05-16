@@ -37,12 +37,13 @@ Dokumen ini berisi rencana implementasi realistis berdasarkan PRD, arsitektur, d
 
 ### Major Task 1.2 - Native Monitoring Service
 
-1. Implement Foreground Service di Android dengan notifikasi persistent.
-2. Tambahkan Accessibility Service untuk deteksi foreground app.
-3. Tambahkan UsageStatsManager untuk fallback data usage.
-4. Buat SessionManager untuk start/stop sesi dan menghitung durasi.
-5. Buat ThresholdEngine untuk cek batas waktu default (20 menit).
-6. Pastikan service restart otomatis jika killed (resilience basics).
+1. setelah permission lengkap, user harus bisa memilih aplikasi yang akan dipantau
+2. Implement Foreground Service di Android dengan notifikasi persistent.
+3. Tambahkan Accessibility Service untuk deteksi foreground app.
+4. Tambahkan UsageStatsManager untuk fallback data usage.
+5. Buat SessionManager untuk start/stop sesi dan menghitung durasi.
+6. Buat ThresholdEngine untuk cek batas waktu default (20 menit).
+7. Pastikan service restart otomatis jika killed (resilience basics).
 
 ### Major Task 1.3 - Flutter <-> Android Integration
 

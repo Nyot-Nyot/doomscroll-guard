@@ -3,6 +3,7 @@ import 'package:doomscrolling_guard/core/themes/app_colors.dart';
 import 'package:doomscrolling_guard/core/services/native_permission_service.dart';
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
 import 'package:doomscrolling_guard/shared/models/permission_state.dart';
+import 'package:doomscrolling_guard/features/onboarding/screens/app_picker_screen.dart';
 
 class PermissionGuideScreen extends StatefulWidget {
   const PermissionGuideScreen({super.key});
@@ -143,9 +144,7 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> with Widg
                   onPressed: _allGranted ? () {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
-                        builder: (_) => const Scaffold(
-                          body: Center(child: Text("Dashboard (Next Major Task)")),
-                        ),
+                        builder: (_) => const AppPickerScreen(),
                       ),
                     );
                   } : null,

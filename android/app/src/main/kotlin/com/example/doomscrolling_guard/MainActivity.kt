@@ -50,6 +50,7 @@ class MainActivity : FlutterActivity() {
                 "stopService" -> result.success(false)
                 "getMonitoringState" -> result.success(mapOf("isRunning" to false))
                 "getUsageStats" -> result.success(emptyList<Any>())
+                "getInstalledApps" -> result.success(getInstalledApps(context))
                 else -> result.notImplemented()
             }
         }
@@ -110,6 +111,29 @@ class MainActivity : FlutterActivity() {
     private fun isIgnoringBatteryOptimizations(): Boolean {
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
         return pm.isIgnoringBatteryOptimizations(packageName)
+    }
+
+    private fun getInstalledApps(context: Context): List<Map<String, String>> {
+        val pm = context.packageManager
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+        }
+        
+        val resolveInfos = pm.queryIntentActivities(intent, 0)
+        val appList = mutableListOf<Map<String, String>>()
+        val uniquePackages = mutableSetOf<String>()
+
+        for (resolveInfo in resolveInfos) {
+            val packageName = resolveInfo.activityInfo.packageName
+            if (!uniquePackages.contains(packageName) && packageName != context.packageName) {
+                val appName = resolveInfo.loadLabel(pm).toString()
+                appList.add(mapOf("packageName" to packageName, "appName" to appName))
+                uniquePackages.add(packageName)
+            }
+        }
+        
+        // Sort alphabetically by app name
+        return appList.sortedBy { it["appName"]?.lowercase() }
     }
 
     private companion object {
