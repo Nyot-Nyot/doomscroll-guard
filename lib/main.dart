@@ -107,10 +107,9 @@ class _AppRootState extends State<AppRoot> {
     final savedPermissions =
         widget.localStorageService.getPermissionState() ?? PermissionState.empty();
     final nativePermissions = await widget.nativeBridge.getPermissionState();
-    final permissionState = nativePermissions;
 
-    if (!_isSamePermissionState(savedPermissions, permissionState)) {
-      await widget.localStorageService.savePermissionState(permissionState);
+    if (!_isSamePermissionState(savedPermissions, nativePermissions)) {
+      await widget.localStorageService.savePermissionState(nativePermissions);
     }
 
     final settings = widget.localStorageService.getSettings() ?? _defaultSettings();
@@ -119,7 +118,7 @@ class _AppRootState extends State<AppRoot> {
     setState(() {
       _state = AppLaunchState(
         onboardingCompleted: onboardingCompleted,
-        permissionState: permissionState,
+        permissionState: nativePermissions,
         settings: settings,
       );
       _isLoading = false;
