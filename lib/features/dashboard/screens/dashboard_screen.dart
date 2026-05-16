@@ -26,7 +26,10 @@ class DashboardScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 final settings = LocalStorageService().getSettings();
-                NativeMonitoringService().startService(settings?.targetApps ?? []);
+                NativeMonitoringService().startService(
+                  settings?.targetApps ?? [],
+                  settings?.thresholdMinutes ?? 20,
+                );
               },
               child: const Text('Start Foreground Service'),
             ),

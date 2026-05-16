@@ -21,12 +21,30 @@ class MonitoringService : Service() {
         createNotificationChannel()
     }
 
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val checkRunnable = object : Runnable {
+        override fun run() {
+            val currentApp = SessionManager.currentSessionApp
+            if (currentApp != null) {
+                ThresholdEngine.checkUsage(this@MonitoringService, currentApp)
+            }
+            handler.postDelayed(this, 5000L) // Poll every 5 seconds
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = createNotification()
         startForeground(NOTIFICATION_ID, notification)
         
-        // Background monitoring tasks will be linked here
+        handler.removeCallbacks(checkRunnable)
+        handler.post(checkRunnable)
+        
         return START_STICKY
+    }
+
+    override fun onDestroy() {
+        handler.removeCallbacks(checkRunnable)
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? {

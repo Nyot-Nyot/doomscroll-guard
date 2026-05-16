@@ -49,9 +49,13 @@ class MainActivity : FlutterActivity() {
                 }
                 "startService" -> {
                     val targetApps = call.argument<List<String>>("targetApps")
+                    val thresholdMinutes = call.argument<Int>("thresholdMinutes") ?: 20
                     if (targetApps != null) {
                         val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
-                        prefs.edit().putStringSet("targetApps", targetApps.toSet()).apply()
+                        prefs.edit()
+                            .putStringSet("targetApps", targetApps.toSet())
+                            .putInt("thresholdMinutes", thresholdMinutes)
+                            .apply()
                     }
 
                     val serviceIntent = Intent(context, MonitoringService::class.java)
