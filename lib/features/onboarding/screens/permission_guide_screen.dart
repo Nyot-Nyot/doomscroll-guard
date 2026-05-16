@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
+import 'package:doomscrolling_guard/core/services/native_permission_service.dart';
 
 class PermissionGuideScreen extends StatefulWidget {
   const PermissionGuideScreen({super.key});
@@ -8,8 +9,9 @@ class PermissionGuideScreen extends StatefulWidget {
   State<PermissionGuideScreen> createState() => _PermissionGuideScreenState();
 }
 
-class _PermissionGuideScreenState extends State<PermissionGuideScreen> {
-  // Mock states for UI checklist. Real implementation in next sub-task.
+class _PermissionGuideScreenState extends State<PermissionGuideScreen> with WidgetsBindingObserver {
+  final NativePermissionService _permissionService = NativePermissionService();
+
   final Map<String, bool> _permissionStatus = {
     'accessibility': false,
     'usage': false,
@@ -17,14 +19,51 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> {
     'battery': false,
   };
 
-  void _pretendToGrant(String key) {
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   const SnackBar(content: Text('Requesting permission...')),
-    // );
-    // For now we just toggle for UI demo
-    setState(() {
-      _permissionStatus[key] = true;
-    });
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkPermissions();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissions();
+    }
+  }
+
+  Future<void> _checkPermissions() async {
+    final status = await _permissionService.checkPermissions();
+    if (mounted) {
+      setState(() {
+        _permissionStatus.addAll(status);
+      });
+    }
+  }
+
+  Future<void> _requestPermission(String key) async {
+    switch (key) {
+      case 'accessibility':
+        await _permissionService.requestAccessibility();
+        break;
+      case 'usage':
+        await _permissionService.requestUsageAccess();
+        break;
+      case 'overlay':
+        await _permissionService.requestOverlay();
+        break;
+      case 'battery':
+        await _permissionService.requestBatteryOptimization();
+        break;
+    }
+    // We don't await Settings screens, user comes back -> didChangeAppLifecycleState triggers check
   }
 
   bool get _allGranted {
@@ -151,7 +190,7 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> {
         trailing: granted
             ? const Icon(Icons.check_circle, color: AppColors.primaryAccent)
             : TextButton(
-                onPressed: () => _pretendToGrant(key),
+                onPressed: () => _requestPermission(key),
                 child: const Text('Grant'),
               ),
       ),

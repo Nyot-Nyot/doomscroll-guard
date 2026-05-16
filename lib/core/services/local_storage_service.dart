@@ -36,9 +36,9 @@ class LocalStorageService {
     ]);
   }
 
-  void _registerAdapterIfNeeded(TypeAdapter adapter) {
+  void _registerAdapterIfNeeded<T>(TypeAdapter<T> adapter) {
     if (!Hive.isAdapterRegistered(adapter.typeId)) {
-      Hive.registerAdapter(adapter);
+      Hive.registerAdapter<T>(adapter);
     }
   }
 
