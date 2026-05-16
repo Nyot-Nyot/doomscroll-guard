@@ -1,6 +1,14 @@
+import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await LocalStorageService().init();
+  if (kDebugMode) {
+    await LocalStorageService().seedIfEmpty();
+  }
+
   runApp(const MyApp());
 }
 
