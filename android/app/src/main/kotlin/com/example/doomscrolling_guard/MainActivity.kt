@@ -71,8 +71,19 @@ class MainActivity : FlutterActivity() {
                     context.stopService(serviceIntent)
                     result.success(true)
                 }
-                "getMonitoringState" -> result.success(mapOf("isRunning" to false))
-                "getUsageStats" -> result.success(emptyList<Any>())
+                "getMonitoringState" -> {
+                    result.success(mapOf("isRunning" to MonitoringService.isRunning))
+                }
+                "getUsageStats" -> {
+                    val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
+                    val targetApps = prefs.getStringSet("targetApps", emptySet()) ?: emptySet()
+                    val statsMap = mutableMapOf<String, Long>()
+                    
+                    for (app in targetApps) {
+                        statsMap[app] = SessionManager.getDailyUsageStats(context, app)
+                    }
+                    result.success(statsMap)
+                }
                 "getInstalledApps" -> result.success(getInstalledApps(context))
                 else -> result.notImplemented()
             }

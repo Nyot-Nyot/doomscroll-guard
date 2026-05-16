@@ -29,4 +29,22 @@ class NativeMonitoringService {
       return false;
     }
   }
+
+  Future<Map<String, int>> getUsageStats() async {
+    try {
+      final Map<dynamic, dynamic>? result = await _channel.invokeMethod('getUsageStats');
+      if (result == null) return {};
+      
+      final Map<String, int> stats = {};
+      for (final key in result.keys) {
+         stats[key.toString()] = (result[key] is int) 
+            ? result[key] 
+            : (int.tryParse(result[key].toString()) ?? 0);
+      }
+      return stats;
+    } catch (e) {
+      debugPrint("Error getting usage stats: $e");
+      return {};
+    }
+  }
 }
