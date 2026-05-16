@@ -12,7 +12,7 @@ Future<void> main() async {
     await LocalStorageService().seedIfEmpty();
   }
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class AppLaunchState {
@@ -40,16 +40,15 @@ class AppLaunchState {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({
+  const MyApp({
     super.key,
-    LocalStorageService? localStorageService,
-    NativeBridge? nativeBridge,
+    this.localStorageService,
+    this.nativeBridge,
     this.initialState,
-  }) : localStorageService = localStorageService ?? LocalStorageService(),
-       nativeBridge = nativeBridge ?? NativeBridge();
+  });
 
-  final LocalStorageService localStorageService;
-  final NativeBridge nativeBridge;
+  final LocalStorageService? localStorageService;
+  final NativeBridge? nativeBridge;
   final AppLaunchState? initialState;
 
   @override
@@ -61,8 +60,8 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: AppRoot(
-        localStorageService: localStorageService,
-        nativeBridge: nativeBridge,
+        localStorageService: localStorageService ?? LocalStorageService(),
+        nativeBridge: nativeBridge ?? NativeBridge(),
         initialState: initialState,
       ),
     );
