@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
 import 'package:doomscrolling_guard/core/services/native_permission_service.dart';
+import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
+import 'package:doomscrolling_guard/shared/models/permission_state.dart';
 
 class PermissionGuideScreen extends StatefulWidget {
   const PermissionGuideScreen({super.key});
@@ -45,6 +47,14 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> with Widg
       setState(() {
         _permissionStatus.addAll(status);
       });
+      
+      final state = PermissionState(
+        accessibilityGranted: status['accessibility'] ?? false,
+        usageAccessGranted: status['usage'] ?? false,
+        overlayGranted: status['overlay'] ?? false,
+        batteryOptimizationIgnored: status['battery'] ?? false,
+      );
+      await LocalStorageService().savePermissionState(state);
     }
   }
 
@@ -131,7 +141,13 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> with Widg
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _allGranted ? () {
-                    // Navigate to dashboard
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => const Scaffold(
+                          body: Center(child: Text("Dashboard (Next Major Task)")),
+                        ),
+                      ),
+                    );
                   } : null,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
