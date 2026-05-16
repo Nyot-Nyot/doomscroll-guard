@@ -17,7 +17,9 @@ class MonitoringAccessibilityService : AccessibilityService() {
             
             if (targetApps.contains(packageName)) {
                 Log.i("DoomscrollGuard", "DSG Monitoring: Opened $packageName")
-                // Implementation for Phase 1 - Major Task 1.2 SessionManager will be here
+                SessionManager.onAppOpened(this, packageName)
+            } else {
+                SessionManager.onAppClosed(this)
             }
         }
     }
