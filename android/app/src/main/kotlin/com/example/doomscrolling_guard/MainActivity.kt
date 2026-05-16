@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import android.text.TextUtils
@@ -46,10 +47,33 @@ class MainActivity : FlutterActivity() {
                     }
                     result.success(true)
                 }
-                "startService" -> result.success(false)
-                "stopService" -> result.success(false)
+                "startService" -> {
+                    val targetApps = call.argument<List<String>>("targetApps")
+                    val thresholdMinutes = call.argument<Int>("thresholdMinutes") ?: 20
+                    if (targetApps != null) {
+                        val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
+                        prefs.edit()
+                            .putStringSet("targetApps", targetApps.toSet())
+                            .putInt("thresholdMinutes", thresholdMinutes)
+                            .apply()
+                    }
+
+                    val serviceIntent = Intent(context, MonitoringService::class.java)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(serviceIntent)
+                    } else {
+                        context.startService(serviceIntent)
+                    }
+                    result.success(true)
+                }
+                "stopService" -> {
+                    val serviceIntent = Intent(context, MonitoringService::class.java)
+                    context.stopService(serviceIntent)
+                    result.success(true)
+                }
                 "getMonitoringState" -> result.success(mapOf("isRunning" to false))
                 "getUsageStats" -> result.success(emptyList<Any>())
+                "getInstalledApps" -> result.success(getInstalledApps(context))
                 else -> result.notImplemented()
             }
         }
@@ -110,6 +134,29 @@ class MainActivity : FlutterActivity() {
     private fun isIgnoringBatteryOptimizations(): Boolean {
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
         return pm.isIgnoringBatteryOptimizations(packageName)
+    }
+
+    private fun getInstalledApps(context: Context): List<Map<String, String>> {
+        val pm = context.packageManager
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+        }
+        
+        val resolveInfos = pm.queryIntentActivities(intent, 0)
+        val appList = mutableListOf<Map<String, String>>()
+        val uniquePackages = mutableSetOf<String>()
+
+        for (resolveInfo in resolveInfos) {
+            val packageName = resolveInfo.activityInfo.packageName
+            if (!uniquePackages.contains(packageName) && packageName != context.packageName) {
+                val appName = resolveInfo.loadLabel(pm).toString()
+                appList.add(mapOf("packageName" to packageName, "appName" to appName))
+                uniquePackages.add(packageName)
+            }
+        }
+        
+        // Sort alphabetically by app name
+        return appList.sortedBy { it["appName"]?.lowercase() }
     }
 
     private companion object {
