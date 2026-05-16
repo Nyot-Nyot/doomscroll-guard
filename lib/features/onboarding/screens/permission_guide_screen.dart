@@ -1,0 +1,215 @@
+import 'package:flutter/material.dart';
+import 'package:doomscrolling_guard/core/themes/app_colors.dart';
+import 'package:doomscrolling_guard/core/services/native_permission_service.dart';
+import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
+import 'package:doomscrolling_guard/shared/models/permission_state.dart';
+
+class PermissionGuideScreen extends StatefulWidget {
+  const PermissionGuideScreen({super.key});
+
+  @override
+  State<PermissionGuideScreen> createState() => _PermissionGuideScreenState();
+}
+
+class _PermissionGuideScreenState extends State<PermissionGuideScreen> with WidgetsBindingObserver {
+  final NativePermissionService _permissionService = NativePermissionService();
+
+  final Map<String, bool> _permissionStatus = {
+    'accessibility': false,
+    'usage': false,
+    'overlay': false,
+    'battery': false,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkPermissions();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissions();
+    }
+  }
+
+  Future<void> _checkPermissions() async {
+    final status = await _permissionService.checkPermissions();
+    if (mounted) {
+      setState(() {
+        _permissionStatus.addAll(status);
+      });
+      
+      final state = PermissionState(
+        accessibilityGranted: status['accessibility'] ?? false,
+        usageAccessGranted: status['usage'] ?? false,
+        overlayGranted: status['overlay'] ?? false,
+        batteryOptimizationIgnored: status['battery'] ?? false,
+      );
+      await LocalStorageService().savePermissionState(state);
+    }
+  }
+
+  Future<void> _requestPermission(String key) async {
+    switch (key) {
+      case 'accessibility':
+        await _permissionService.requestAccessibility();
+        break;
+      case 'usage':
+        await _permissionService.requestUsageAccess();
+        break;
+      case 'overlay':
+        await _permissionService.requestOverlay();
+        break;
+      case 'battery':
+        await _permissionService.requestBatteryOptimization();
+        break;
+    }
+    // We don't await Settings screens, user comes back -> didChangeAppLifecycleState triggers check
+  }
+
+  bool get _allGranted {
+    return _permissionStatus.values.every((v) => v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Setup Permissions'),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: AppColors.textPrimary,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Help us protect your time',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Doomscroll Guard needs these permissions to monitor usage and gently intervene when needed. We don\'t collect your personal data.',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 32),
+              Expanded(
+                child: ListView(
+                  children: [
+                    _buildPermissionItem(
+                      icon: Icons.accessibility_new_rounded,
+                      title: 'Accessibility Service',
+                      description: 'Required to detect when you open target apps.',
+                      key: 'accessibility',
+                    ),
+                    _buildPermissionItem(
+                      icon: Icons.analytics_outlined,
+                      title: 'Usage Access',
+                      description: 'Required to measure your screen time accurately.',
+                      key: 'usage',
+                    ),
+                    _buildPermissionItem(
+                      icon: Icons.layers_outlined,
+                      title: 'Display over other apps',
+                      description: 'Required to show gentle reminders on screen.',
+                      key: 'overlay',
+                    ),
+                    _buildPermissionItem(
+                      icon: Icons.battery_charging_full_rounded,
+                      title: 'Battery Optimization',
+                      description: 'Ensure our worker isn\'t killed by the system.',
+                      key: 'battery',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _allGranted ? () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => const Scaffold(
+                          body: Center(child: Text("Dashboard (Next Major Task)")),
+                        ),
+                      ),
+                    );
+                  } : null,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('Finish Setup'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPermissionItem({
+    required IconData icon,
+    required String title,
+    required String description,
+    required String key,
+  }) {
+    final granted = _permissionStatus[key] ?? false;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16.0),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: granted ? AppColors.primaryAccent : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16.0),
+        leading: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: granted ? AppColors.primaryAccent : AppColors.background,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: granted ? Colors.white : AppColors.primaryAccent,
+          ),
+        ),
+        title: Text(
+          title,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: Text(description),
+        ),
+        trailing: granted
+            ? const Icon(Icons.check_circle, color: AppColors.primaryAccent)
+            : TextButton(
+                onPressed: () => _requestPermission(key),
+                child: const Text('Grant'),
+              ),
+      ),
+    );
+  }
+}
