@@ -1,30 +1,93 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:doomscrolling_guard/main.dart';
+import 'package:doomscrolling_guard/shared/models/permission_state.dart';
+import 'package:doomscrolling_guard/shared/models/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:doomscrolling_guard/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('shows onboarding multi-step flow on first launch', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(
+        initialState: AppLaunchState(
+          onboardingCompleted: false,
+          permissionState: PermissionState.empty(),
+          settings: _testSettings(),
+        ),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Onboarding'), findsOneWidget);
+    expect(find.text('Langkah 1 dari 3'), findsOneWidget);
+    expect(find.text('Berikutnya'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.tap(find.text('Berikutnya'));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Langkah 2 dari 3'), findsOneWidget);
+
+    await tester.tap(find.text('Berikutnya'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Langkah 3 dari 3'), findsOneWidget);
+    expect(find.text('Lanjut ke Setup'), findsOneWidget);
   });
+
+  testWidgets('guard keeps monitoring button disabled before permissions complete', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(
+        initialState: AppLaunchState(
+          onboardingCompleted: true,
+          permissionState: PermissionState.empty(),
+          settings: _testSettings(),
+        ),
+      ),
+    );
+
+    expect(find.text('Permission Setup'), findsOneWidget);
+    final button = tester.widget<ElevatedButton>(find.widgetWithText(
+      ElevatedButton,
+      'Mulai Monitoring',
+    ));
+    expect(button.onPressed, isNull);
+  });
+
+  testWidgets('enables monitoring button when all permissions complete', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(
+        initialState: AppLaunchState(
+          onboardingCompleted: true,
+          permissionState: PermissionState(
+            accessibilityGranted: true,
+            usageAccessGranted: true,
+            overlayGranted: true,
+            batteryOptimizationIgnored: true,
+          ),
+          settings: _testSettings(),
+        ),
+      ),
+    );
+
+    final button = tester.widget<ElevatedButton>(find.widgetWithText(
+      ElevatedButton,
+      'Mulai Monitoring',
+    ));
+    expect(button.onPressed, isNotNull);
+  });
+}
+
+Settings _testSettings() {
+  return Settings(
+    targetApps: const <String>[],
+    thresholdMinutes: 20,
+    monitoringEnabled: true,
+    whitelistApps: const <String>[],
+    quietHoursStartMinutes: -1,
+    quietHoursEndMinutes: -1,
+  );
 }

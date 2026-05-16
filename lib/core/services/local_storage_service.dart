@@ -16,9 +16,11 @@ class LocalStorageService {
   static const String _permissionsBoxName = 'permissions';
   static const String _dailyUsageBoxName = 'daily_usage';
   static const String _sessionBoxName = 'usage_sessions';
+  static const String _appStateBoxName = 'app_state';
 
   static const String _settingsKey = 'current_settings';
   static const String _permissionKey = 'permission_state';
+  static const String _onboardingCompletedKey = 'onboarding_completed';
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -33,6 +35,7 @@ class LocalStorageService {
       Hive.openBox<PermissionState>(_permissionsBoxName),
       Hive.openBox<DailyUsage>(_dailyUsageBoxName),
       Hive.openBox<UsageSession>(_sessionBoxName),
+      Hive.openBox<dynamic>(_appStateBoxName),
     ]);
   }
 
@@ -48,6 +51,7 @@ class LocalStorageService {
   Box<DailyUsage> get _dailyUsageBox =>
       Hive.box<DailyUsage>(_dailyUsageBoxName);
   Box<UsageSession> get _sessionBox => Hive.box<UsageSession>(_sessionBoxName);
+  Box<dynamic> get _appStateBox => Hive.box<dynamic>(_appStateBoxName);
 
   Settings? getSettings() => _settingsBox.get(_settingsKey);
 
@@ -59,6 +63,14 @@ class LocalStorageService {
 
   Future<void> savePermissionState(PermissionState state) async {
     await _permissionsBox.put(_permissionKey, state);
+  }
+
+  bool isOnboardingCompleted() {
+    return _appStateBox.get(_onboardingCompletedKey, defaultValue: false) == true;
+  }
+
+  Future<void> setOnboardingCompleted(bool value) async {
+    await _appStateBox.put(_onboardingCompletedKey, value);
   }
 
   List<DailyUsage> getAllDailyUsage() => _dailyUsageBox.values.toList();
@@ -100,14 +112,11 @@ class LocalStorageService {
     }
 
     if (_permissionsBox.isEmpty) {
-      await savePermissionState(
-        PermissionState(
-          accessibilityGranted: false,
-          usageAccessGranted: false,
-          overlayGranted: false,
-          batteryOptimizationIgnored: false,
-        ),
-      );
+      await savePermissionState(PermissionState.empty());
+    }
+
+    if (!_appStateBox.containsKey(_onboardingCompletedKey)) {
+      await setOnboardingCompleted(false);
     }
 
     if (_dailyUsageBox.isEmpty) {
