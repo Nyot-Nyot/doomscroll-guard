@@ -48,6 +48,12 @@ class MainActivity : FlutterActivity() {
                     result.success(true)
                 }
                 "startService" -> {
+                    val targetApps = call.argument<List<String>>("targetApps")
+                    if (targetApps != null) {
+                        val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
+                        prefs.edit().putStringSet("targetApps", targetApps.toSet()).apply()
+                    }
+
                     val serviceIntent = Intent(context, MonitoringService::class.java)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         context.startForegroundService(serviceIntent)

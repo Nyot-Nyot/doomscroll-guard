@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/services/native_monitoring_service.dart';
+import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -24,7 +25,8 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                NativeMonitoringService().startService();
+                final settings = LocalStorageService().getSettings();
+                NativeMonitoringService().startService(settings?.targetApps ?? []);
               },
               child: const Text('Start Foreground Service'),
             ),

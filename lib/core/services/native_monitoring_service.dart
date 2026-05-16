@@ -4,9 +4,9 @@ import 'package:flutter/foundation.dart';
 class NativeMonitoringService {
   static const MethodChannel _channel = MethodChannel('doomscroll_guard/channel');
 
-  Future<void> startService() async {
+  Future<void> startService(List<String> targetApps) async {
     try {
-      await _channel.invokeMethod('startService');
+      await _channel.invokeMethod('startService', {'targetApps': targetApps});
     } catch (e) {
       debugPrint("Error starting service: $e");
     }
