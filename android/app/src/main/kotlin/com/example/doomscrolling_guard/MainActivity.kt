@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import android.text.TextUtils
@@ -46,8 +47,20 @@ class MainActivity : FlutterActivity() {
                     }
                     result.success(true)
                 }
-                "startService" -> result.success(false)
-                "stopService" -> result.success(false)
+                "startService" -> {
+                    val serviceIntent = Intent(context, MonitoringService::class.java)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(serviceIntent)
+                    } else {
+                        context.startService(serviceIntent)
+                    }
+                    result.success(true)
+                }
+                "stopService" -> {
+                    val serviceIntent = Intent(context, MonitoringService::class.java)
+                    context.stopService(serviceIntent)
+                    result.success(true)
+                }
                 "getMonitoringState" -> result.success(mapOf("isRunning" to false))
                 "getUsageStats" -> result.success(emptyList<Any>())
                 "getInstalledApps" -> result.success(getInstalledApps(context))

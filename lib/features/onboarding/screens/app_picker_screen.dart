@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/services/installed_apps_service.dart';
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
+import 'package:doomscrolling_guard/features/dashboard/screens/dashboard_screen.dart';
 
 class AppPickerScreen extends StatefulWidget {
   const AppPickerScreen({super.key});
@@ -48,9 +49,7 @@ class _AppPickerScreenState extends State<AppPickerScreen> {
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text("Dashboard (Next)")),
-          ),
+          builder: (_) => const DashboardScreen(),
         ),
       );
     }

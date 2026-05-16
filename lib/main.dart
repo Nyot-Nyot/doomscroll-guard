@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/themes/app_theme.dart';
 import 'package:doomscrolling_guard/features/onboarding/screens/onboarding_screen.dart';
 import 'package:doomscrolling_guard/features/onboarding/screens/app_picker_screen.dart';
+import 'package:doomscrolling_guard/features/dashboard/screens/dashboard_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,7 +57,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       home: permissionsCompleted
           ? (targetAppsCompleted
-              ? const Scaffold(body: Center(child: Text("Dashboard (Next Major Task)")))
+              ? const DashboardScreen()
               : const AppPickerScreen())
           : const OnboardingScreen(),
     );
