@@ -14,10 +14,12 @@ class MonitoringService : Service() {
     companion object {
         const val CHANNEL_ID = "DoomscrollGuardChannel"
         const val NOTIFICATION_ID = 1001
+        var isRunning = false
     }
 
     override fun onCreate() {
         super.onCreate()
+        isRunning = true
         createNotificationChannel()
     }
 
@@ -43,6 +45,7 @@ class MonitoringService : Service() {
     }
 
     override fun onDestroy() {
+        isRunning = false
         handler.removeCallbacks(checkRunnable)
         super.onDestroy()
     }
