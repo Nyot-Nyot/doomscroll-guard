@@ -80,7 +80,7 @@ class MainActivity : FlutterActivity() {
                     val statsMap = mutableMapOf<String, Long>()
                     
                     for (app in targetApps) {
-                        statsMap[app] = SessionManager.getDailyUsageStats(context, app)
+                        statsMap[app] = SessionManager.getRealtimeDailyUsage(context, app)
                     }
                     result.success(statsMap)
                 }

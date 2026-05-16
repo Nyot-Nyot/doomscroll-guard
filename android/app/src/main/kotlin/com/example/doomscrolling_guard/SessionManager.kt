@@ -15,7 +15,7 @@ object SessionManager {
                 onAppClosed(context, currentSessionApp!!)
             }
 
-            Log.i("DoomscrollGuard", "SessionManager: Started tracking $$packageName")
+            Log.i("DoomscrollGuard", "SessionManager: Started tracking $packageName")
             currentSessionApp = packageName
             sessionStartTime = System.currentTimeMillis()
         }
@@ -24,11 +24,11 @@ object SessionManager {
     fun onAppClosed(context: Context, packageName: String? = currentSessionApp) {
         if (packageName != null && currentSessionApp == packageName) {
             val durationMs = System.currentTimeMillis() - sessionStartTime
-            Log.i("DoomscrollGuard", "SessionManager: Ended tracking $$packageName. Session lasted $${durationMs}ms")
+            Log.i("DoomscrollGuard", "SessionManager: Ended tracking $packageName. Session lasted ${durationMs}ms")
             
             val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
-            val cumulativeTime = prefs.getLong("usage_$$packageName", 0L)
-            prefs.edit().putLong("usage_$$packageName", cumulativeTime + durationMs).apply()
+            val cumulativeTime = prefs.getLong("usage_$packageName", 0L)
+            prefs.edit().putLong("usage_$packageName", cumulativeTime + durationMs).apply()
 
             currentSessionApp = null
             sessionStartTime = 0L
@@ -52,8 +52,16 @@ object SessionManager {
         val packageStat = stats?.find { it.packageName == packageName }
         
         val androidUsageTime = packageStat?.totalTimeInForeground ?: 0L
-        val ourTrackingTime = prefs.getLong("usage_$$packageName", 0L)
+        val ourTrackingTime = prefs.getLong("usage_$packageName", 0L)
         
         return maxOf(androidUsageTime, ourTrackingTime)
+    }
+
+    fun getRealtimeDailyUsage(context: Context, packageName: String): Long {
+        var currentOngoingMs = 0L
+        if (currentSessionApp == packageName) {
+            currentOngoingMs = System.currentTimeMillis() - sessionStartTime
+        }
+        return getDailyUsageStats(context, packageName) + currentOngoingMs
     }
 }

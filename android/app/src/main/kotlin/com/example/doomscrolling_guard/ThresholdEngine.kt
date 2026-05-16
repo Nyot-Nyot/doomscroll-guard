@@ -10,12 +10,7 @@ object ThresholdEngine {
         // Convert to ms. If limit is 0, we can assume it's disabled, but let's just multiply.
         val limitMs = limitMinutes * 60 * 1000L
         
-        var currentOngoingMs = 0L
-        if (SessionManager.currentSessionApp == packageName) {
-            currentOngoingMs = System.currentTimeMillis() - SessionManager.sessionStartTime
-        }
-
-        val totalUsageMs = SessionManager.getDailyUsageStats(context, packageName) + currentOngoingMs
+        val totalUsageMs = SessionManager.getRealtimeDailyUsage(context, packageName)
         
         if (totalUsageMs >= limitMs) {
             Log.w("DoomscrollGuard", "THRESHOLD REACHED FOR $packageName: $totalUsageMs ms >= $limitMs ms")
