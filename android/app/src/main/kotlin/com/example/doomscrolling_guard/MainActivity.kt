@@ -84,11 +84,26 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun isAccessibilityServiceEnabled(): Boolean {
-        return Settings.Secure.getInt(
-            contentResolver,
-            Settings.Secure.ACCESSIBILITY_ENABLED,
-            0,
-        ) == 1
+        val isAccessibilityEnabled =
+            Settings.Secure.getInt(
+                contentResolver,
+                Settings.Secure.ACCESSIBILITY_ENABLED,
+                0,
+            ) == 1
+        if (!isAccessibilityEnabled) {
+            return false
+        }
+
+        val enabledServices =
+            Settings.Secure.getString(
+                contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+            ) ?: return false
+
+        val packagePrefix = "$packageName/".lowercase()
+        return enabledServices
+            .split(':')
+            .any { service -> service.lowercase().startsWith(packagePrefix) }
     }
 
     private fun hasUsageAccessPermission(): Boolean {
