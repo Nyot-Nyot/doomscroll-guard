@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
+import 'package:doomscrolling_guard/features/onboarding/screens/permission_guide_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -35,7 +36,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
     } else {
       // Done - navigate to permission screen
-      debugPrint('Navigate to permission guide');
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const PermissionGuideScreen()),
+      );
     }
   }
 

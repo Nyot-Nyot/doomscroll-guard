@@ -6,9 +6,14 @@ import 'package:doomscrolling_guard/features/onboarding/screens/onboarding_scree
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LocalStorageService().init();
-  if (kDebugMode) {
-    await LocalStorageService().seedIfEmpty();
+  try {
+    await LocalStorageService().init();
+    if (kDebugMode) {
+      await LocalStorageService().seedIfEmpty();
+    }
+    debugPrint("Hive initialized successfully.");
+  } catch (e, st) {
+    debugPrint("Error initializing Hive: $e\n$st");
   }
 
   runApp(const MyApp());
