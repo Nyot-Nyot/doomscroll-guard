@@ -1,6 +1,5 @@
 package com.example.doomscrolling_guard
 
-import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.util.Log
 import java.util.Calendar
@@ -8,27 +7,15 @@ import java.util.Calendar
 object SessionManager {
     var currentSessionApp: String? = null
     var sessionStartTime: Long = 0L
-    var sessionStartAndroidUsage: Long = 0L
 
-    // Tracks the monotonic maximum reported usage so far for a specific day, preventing drops.
-    private val maxUsageReported = mutableMapOf<String, Long>()
-
-    private fun getAndroidUsageToday(context: Context, packageName: String): Long {
-        val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        
+    private fun getTodayStartMillis(): Long {
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
-        val startTime = calendar.timeInMillis
-        val endTime = System.currentTimeMillis()
-
-        val statsMap = usageStatsManager.queryAndAggregateUsageStats(startTime, endTime)
-        val packageStat = statsMap[packageName]
-        
-        return packageStat?.totalTimeInForeground ?: 0L
+        return calendar.timeInMillis
     }
 
     fun onAppOpened(context: Context, packageName: String) {
@@ -40,21 +27,23 @@ object SessionManager {
             Log.i("DoomscrollGuard", "SessionManager: Started tracking $packageName")
             currentSessionApp = packageName
             sessionStartTime = System.currentTimeMillis()
-            sessionStartAndroidUsage = getAndroidUsageToday(context, packageName)
         }
     }
 
     fun onAppClosed(context: Context, packageName: String? = currentSessionApp) {
         if (packageName != null && currentSessionApp == packageName) {
-            val durationMs = System.currentTimeMillis() - sessionStartTime
-            Log.i("DoomscrollGuard", "SessionManager: Ended tracking $packageName. Session lasted ${durationMs}ms")
+            val elapsedMs = System.currentTimeMillis() - sessionStartTime
+            Log.i("DoomscrollGuard", "SessionManager: Ended tracking $packageName. Session lasted ${elapsedMs}ms")
             
-            // To be instantly accurate on close, we force an update of the monotonic value 
-            getRealtimeDailyUsage(context, packageName, isClosing = true)
+            val todayStart = getTodayStartMillis()
+            val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
+            val baseKey = "usage_${packageName}_$todayStart"
+            val baseUsage = prefs.getLong(baseKey, 0L)
+            
+            prefs.edit().putLong(baseKey, baseUsage + elapsedMs).apply()
 
             currentSessionApp = null
             sessionStartTime = 0L
-            sessionStartAndroidUsage = 0L
         }
     }
 
@@ -63,27 +52,16 @@ object SessionManager {
     }
 
     fun getRealtimeDailyUsage(context: Context, packageName: String, isClosing: Boolean = false): Long {
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val dayKey = "${packageName}_${calendar.timeInMillis}"
+        val todayStart = getTodayStartMillis()
+        val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
+        val baseKey = "usage_${packageName}_$todayStart"
+        val baseUsage = prefs.getLong(baseKey, 0L)
 
-        if (currentSessionApp == packageName) {
+        return if (currentSessionApp == packageName && sessionStartTime > 0L) {
             val currentOngoingMs = System.currentTimeMillis() - sessionStartTime
-            val calculated = sessionStartAndroidUsage + currentOngoingMs
-            val maxSeenToday = maxUsageReported[dayKey] ?: 0L
-            val finalReport = maxOf(calculated, maxSeenToday)
-            maxUsageReported[dayKey] = finalReport
-            return finalReport
+            baseUsage + currentOngoingMs
         } else {
-            val androidUsageTime = getAndroidUsageToday(context, packageName)
-            val maxSeenToday = maxUsageReported[dayKey] ?: 0L
-            val finalReport = maxOf(androidUsageTime, maxSeenToday)
-            maxUsageReported[dayKey] = finalReport
-            return finalReport
+            baseUsage
         }
     }
 
