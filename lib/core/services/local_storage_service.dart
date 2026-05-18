@@ -71,6 +71,21 @@ class LocalStorageService {
     await saveDailyUsage(todayKey(), usage);
   }
 
+  Future<void> syncNativeUsage(Map<String, int> nativeStats, int warningCount) async {
+    final Map<String, int> usageSecondsByApp = {};
+    for (final entry in nativeStats.entries) {
+      // Native stats are in milliseconds, Hive expects seconds
+      usageSecondsByApp[entry.key] = (entry.value / 1000).round();
+    }
+
+    final todayUsage = DailyUsage(
+      date: DateTime.now(),
+      usageSecondsByApp: usageSecondsByApp,
+      warningCount: warningCount,
+    );
+    await saveTodayUsage(todayUsage);
+  }
+
   Future<void> addUsageSession(String key, UsageSession session) async {
     await _sessionBox.put(key, session);
   }
