@@ -87,6 +87,13 @@ object SessionManager {
         }
     }
 
+    fun getCurrentSessionDuration(packageName: String): Long {
+        if (currentSessionApp == packageName && sessionStartTime > 0L) {
+            return System.currentTimeMillis() - sessionStartTime
+        }
+        return 0L
+    }
+
     var snoozeUntil: Long = 0L
     var gracePeriodUntil: Long = 0L
     var isInterventionActive: Boolean = false

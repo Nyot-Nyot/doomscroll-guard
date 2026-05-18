@@ -19,14 +19,14 @@ object ThresholdEngine {
         // Convert to ms
         val limitMs = limitMinutes * 60 * 1000L
         
-        val totalUsageMs = SessionManager.getRealtimeDailyUsage(context, packageName)
+        val sessionDurationMs = SessionManager.getCurrentSessionDuration(packageName)
         
-        if (totalUsageMs >= limitMs) {
-            Log.w("DoomscrollGuard", "THRESHOLD REACHED FOR $packageName: $totalUsageMs ms >= $limitMs ms")
+        if (sessionDurationMs >= limitMs) {
+            Log.w("DoomscrollGuard", "THRESHOLD REACHED FOR $packageName: Session duration $sessionDurationMs ms >= $limitMs ms")
             OverlayManager.showIntervention(context, packageName)
             return true
         } else {
-            Log.i("DoomscrollGuard", "Usage for $packageName is $totalUsageMs ms (Limit: $limitMs ms)")
+            Log.i("DoomscrollGuard", "Session duration for $packageName is $sessionDurationMs ms (Limit: $limitMs ms)")
             return false
         }
     }
