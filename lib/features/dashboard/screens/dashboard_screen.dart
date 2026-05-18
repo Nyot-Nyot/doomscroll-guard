@@ -70,9 +70,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 24),
             // Usage stats display
             if (_usageStats.isNotEmpty) ...[
-              const Text("Today's Usage (Fallback + Internal):", style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text("Total Screen Time Today (Batas Harian):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 8),
-              ..._usageStats.entries.map((e) => Text("${e.key}: ${(e.value / 1000).toStringAsFixed(1)} detik")),
+              ..._usageStats.entries.map((e) {
+                final minutes = (e.value / 60000).floor();
+                final seconds = ((e.value % 60000) / 1000).toStringAsFixed(0);
+                final appLabel = e.key.split('.').last;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Text(
+                    "$appLabel (${e.key}): ${minutes}m ${seconds}s",
+                    style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                  ),
+                );
+              }),
               const SizedBox(height: 24),
             ],
             if (!_isRunning)

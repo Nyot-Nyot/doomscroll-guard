@@ -5,19 +5,26 @@ import android.util.Log
 
 object ThresholdEngine {
     fun checkUsage(context: Context, packageName: String): Boolean {
-        val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
-        val limitMinutes = prefs.getInt("thresholdMinutes", 20)
-        // Convert to ms. If limit is 0, we can assume it's disabled, but let's just multiply.
-        val limitMs = limitMinutes * 60 * 1000L
+        if (SessionManager.isSnoozed()) {
+            Log.i("DoomscrollGuard", "ThresholdEngine: Monitoring is snoozed, skipping checks.")
+            return false
+        }
+        if (SessionManager.isGraceActive()) {
+            Log.i("DoomscrollGuard", "ThresholdEngine: Grace period is active, skipping checks.")
+            return false
+        }
+
+        // For testing: Hardcode limit to 10 seconds (10 * 1000L)
+        val limitMs = 10 * 1000L
         
-        val totalUsageMs = SessionManager.getRealtimeDailyUsage(context, packageName)
+        val sessionDurationMs = SessionManager.getCurrentSessionDuration(packageName)
         
-        if (totalUsageMs >= limitMs) {
-            Log.w("DoomscrollGuard", "THRESHOLD REACHED FOR $packageName: $totalUsageMs ms >= $limitMs ms")
-            // TODO: In Major Task 1.4, trigger the Overlay screen here!
+        if (sessionDurationMs >= limitMs) {
+            Log.w("DoomscrollGuard", "THRESHOLD REACHED FOR $packageName: Session duration $sessionDurationMs ms >= $limitMs ms")
+            OverlayManager.showIntervention(context, packageName)
             return true
         } else {
-            Log.i("DoomscrollGuard", "Usage for $packageName is $totalUsageMs ms (Limit: $limitMs ms)")
+            Log.i("DoomscrollGuard", "Session duration for $packageName is $sessionDurationMs ms (Limit: $limitMs ms)")
             return false
         }
     }
