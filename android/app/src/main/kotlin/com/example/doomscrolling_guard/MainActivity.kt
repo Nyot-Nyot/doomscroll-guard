@@ -74,7 +74,8 @@ class MainActivity : FlutterActivity() {
                 "getMonitoringState" -> {
                     result.success(mapOf(
                         "isRunning" to MonitoringService.isRunning,
-                        "warningCount" to SessionManager.getWarningCountToday()
+                        "warningCount" to SessionManager.getWarningCountToday(),
+                        "longestSession" to SessionManager.getLongestSessionToday()
                     ))
                 }
                 "getUsageStats" -> {

@@ -117,6 +117,21 @@ object SessionManager {
         Log.i("DoomscrollGuard", "SessionManager: warningCount incremented to ${current + 1} for $key")
     }
 
+    private val longestSessionMap = mutableMapOf<String, Long>()
+
+    fun getLongestSessionToday(): Long {
+        val key = getDayKey()
+        val currentSessionDuration = if (currentSessionApp != null && sessionStartTime > 0L) {
+            System.currentTimeMillis() - sessionStartTime
+        } else {
+            0L
+        }
+        val storedMax = longestSessionMap[key] ?: 0L
+        val maxSession = maxOf(currentSessionDuration, storedMax)
+        longestSessionMap[key] = maxSession
+        return maxSession
+    }
+
     var snoozeUntil: Long = 0L
     var gracePeriodUntil: Long = 0L
     var isInterventionActive: Boolean = false

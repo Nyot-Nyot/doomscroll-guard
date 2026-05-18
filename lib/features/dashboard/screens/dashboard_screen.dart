@@ -14,6 +14,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _isRunning = false;
   int _warningCount = 0;
+  int _longestSessionMs = 0;
   Map<String, int> _usageStats = {};
   Timer? _timer;
 
@@ -32,6 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final state = await NativeMonitoringService().getMonitoringState();
     final isRunning = state['isRunning'] ?? false;
     final warningCount = state['warningCount'] ?? 0;
+    final longestSession = state['longestSession'] ?? 0;
     final stats = await NativeMonitoringService().getUsageStats();
 
     await LocalStorageService().syncNativeUsage(stats, warningCount);
@@ -40,6 +42,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() {
         _isRunning = isRunning;
         _warningCount = warningCount;
+        _longestSessionMs = longestSession;
         _usageStats = stats;
       });
     }
@@ -227,12 +230,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Stat 3: Monitored Apps
+                  // Stat 3: Longest Session
                   Expanded(
                     child: _buildStatCard(
-                      label: 'Target App',
-                      value: '${targetApps.length} Aplikasi',
-                      icon: Icons.apps_rounded,
+                      label: 'Sesi Terlama',
+                      value: _formatDuration(_longestSessionMs),
+                      icon: Icons.timer_outlined,
                     ),
                   ),
                 ],
