@@ -30,7 +30,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _fetchState() async {
     final state = await NativeMonitoringService().getMonitoringState();
     final isRunning = state['isRunning'] ?? false;
+    final warningCount = state['warningCount'] ?? 0;
     final stats = await NativeMonitoringService().getUsageStats();
+
+    await LocalStorageService().syncNativeUsage(stats, warningCount);
+
     if (mounted) {
       setState(() {
         _isRunning = isRunning;

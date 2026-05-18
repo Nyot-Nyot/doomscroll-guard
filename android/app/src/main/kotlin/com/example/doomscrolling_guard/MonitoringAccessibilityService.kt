@@ -15,6 +15,11 @@ class MonitoringAccessibilityService : AccessibilityService() {
             val prefs = getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
             val targetApps = prefs.getStringSet("targetApps", emptySet()) ?: emptySet()
             
+            if (packageName == this.packageName) {
+                // Ignore our own package (app or overlay window) to prevent disrupting active tracking session
+                return
+            }
+            
             if (targetApps.contains(packageName)) {
                 Log.i("DoomscrollGuard", "DSG Monitoring: Opened $packageName")
                 SessionManager.onAppOpened(this, packageName)
