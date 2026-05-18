@@ -45,7 +45,22 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     }
   }
 
-  void _loadHistory() {
+  Future<void> _loadHistory() async {
+    try {
+      final state = await NativeMonitoringService().getMonitoringState();
+      final warningCount = state['warningCount'] ?? 0;
+      final stats = await NativeMonitoringService().getUsageStats();
+      
+      final Map<String, int> typedStats = {};
+      stats.forEach((key, value) {
+        typedStats[key.toString()] = (value as num).toInt();
+      });
+
+      await LocalStorageService().syncNativeUsage(typedStats, warningCount);
+    } catch (e) {
+      debugPrint("Error syncing native stats in statistics: $e");
+    }
+
     final today = DateTime.now();
     _last7Days = List.generate(7, (index) {
       return DateTime(today.year, today.month, today.day).subtract(Duration(days: index));
