@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
 import 'dashboard_screen.dart';
 import '../../statistics/screens/statistics_screen.dart';
+import '../../settings/screens/settings_screen.dart';
 
 class MainNavigationShell extends StatefulWidget {
   const MainNavigationShell({super.key});
@@ -16,6 +17,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   final List<Widget> _screens = const [
     DashboardScreen(),
     StatisticsScreen(),
+    SettingsScreen(),
   ];
 
   @override
@@ -57,6 +59,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               icon: Icon(Icons.analytics_outlined, color: AppColors.textSecondary),
               selectedIcon: Icon(Icons.analytics_rounded, color: AppColors.primaryAccent),
               label: 'Statistik',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.settings_outlined, color: AppColors.textSecondary),
+              selectedIcon: Icon(Icons.settings_rounded, color: AppColors.primaryAccent),
+              label: 'Pengaturan',
             ),
           ],
         ),
