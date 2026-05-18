@@ -59,4 +59,21 @@ class NativeMonitoringService {
       return {};
     }
   }
+
+  Future<List<Map<String, String>>> getInstalledApps() async {
+    try {
+      final List<dynamic>? result = await _channel.invokeMethod('getInstalledApps');
+      if (result == null) return [];
+      return result.map((item) {
+        final Map<dynamic, dynamic> map = item as Map<dynamic, dynamic>;
+        return {
+          'packageName': map['packageName']?.toString() ?? '',
+          'appName': map['appName']?.toString() ?? '',
+        };
+      }).toList();
+    } catch (e) {
+      debugPrint("Error getting installed apps: $e");
+      return [];
+    }
+  }
 }
