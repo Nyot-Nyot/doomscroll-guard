@@ -179,6 +179,7 @@ class OverlayService : Service() {
             windowManager?.removeView(overlayView)
             overlayView = null
         }
+        SessionManager.isInterventionActive = false
         super.onDestroy()
     }
 }

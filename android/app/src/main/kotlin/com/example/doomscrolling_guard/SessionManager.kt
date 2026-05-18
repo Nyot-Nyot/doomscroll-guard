@@ -84,6 +84,7 @@ object SessionManager {
 
     var snoozeUntil: Long = 0L
     var gracePeriodUntil: Long = 0L
+    var isInterventionActive: Boolean = false
 
     fun snooze(minutes: Int) {
         snoozeUntil = System.currentTimeMillis() + minutes * 60 * 1000L
@@ -108,6 +109,7 @@ object SessionManager {
         sessionStartTime = 0L
         snoozeUntil = 0L
         gracePeriodUntil = 0L
+        isInterventionActive = false
         Log.i("DoomscrollGuard", "SessionManager: Session state reset")
     }
 }

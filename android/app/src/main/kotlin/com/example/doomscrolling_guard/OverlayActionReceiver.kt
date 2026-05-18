@@ -25,9 +25,11 @@ class OverlayActionReceiver : BroadcastReceiver() {
 
         when (action) {
             ACTION_SNOOZE -> {
+                SessionManager.isInterventionActive = false
                 SessionManager.snooze(10) // 10 minutes snooze
             }
             ACTION_DISMISS -> {
+                SessionManager.isInterventionActive = false
                 SessionManager.grantGracePeriod(5) // 5 minutes grace period
             }
             ACTION_BREAK -> {

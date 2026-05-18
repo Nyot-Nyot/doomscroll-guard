@@ -16,6 +16,12 @@ object OverlayManager {
     const val INTERVENTION_NOTIFICATION_ID = 1002
 
     fun showIntervention(context: Context, packageName: String) {
+        if (SessionManager.isInterventionActive) {
+            return // Skip if already active to prevent duplicate triggers/notifs
+        }
+        
+        SessionManager.isInterventionActive = true
+
         if (Settings.canDrawOverlays(context)) {
             Log.i("DoomscrollGuard", "OverlayManager: Displaying overlay for $packageName")
             val intent = Intent(context, OverlayService::class.java).apply {
