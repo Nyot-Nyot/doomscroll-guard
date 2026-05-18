@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/services/native_monitoring_service.dart';
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
@@ -17,11 +18,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _longestSessionMs = 0;
   Map<String, int> _usageStats = {};
   Timer? _timer;
+  Map<String, String> _appNamesMap = {};
+  Map<String, String> _appIconsMap = {};
 
   @override
   void initState() {
     super.initState();
+    _loadAppMetaData();
     _startPolling();
+  }
+
+  Future<void> _loadAppMetaData() async {
+    try {
+      final apps = await NativeMonitoringService().getInstalledApps();
+      final Map<String, String> appNames = {};
+      final Map<String, String> appIcons = {};
+      for (final app in apps) {
+        final pkg = app['packageName'];
+        final name = app['appName'];
+        final icon = app['appIcon'];
+        if (pkg != null) {
+          if (name != null) appNames[pkg] = name;
+          if (icon != null) appIcons[pkg] = icon;
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _appNamesMap = appNames;
+          _appIconsMap = appIcons;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading app metadata: $e");
+    }
   }
 
   void _startPolling() {
@@ -294,7 +323,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 )
               else
                 ..._usageStats.entries.map((e) {
-                  final appLabel = e.key.split('.').last;
+                  final appLabel = _getCleanAppName(e.key);
                   // Threshold for testing is 10 seconds (10000ms)
                   final double progress = (e.value / 10000.0).clamp(0.0, 1.0);
                   final bool isCloseToLimit = progress >= 0.8;
@@ -318,24 +347,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Row(
                           children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryAccent.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  appLabel.isNotEmpty ? appLabel[0].toUpperCase() : 'A',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primaryAccent,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
+                            _buildAppIcon(e.key),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -447,6 +459,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  String _getCleanAppName(String packageName) {
+    if (_appNamesMap.containsKey(packageName)) {
+      return _appNamesMap[packageName]!;
+    }
+    // Fallbacks
+    if (packageName == 'com.instagram.android') return 'Instagram';
+    if (packageName == 'com.zhiliaoapp.musically') return 'TikTok';
+    
+    final parts = packageName.split('.');
+    if (parts.length >= 2) {
+      final candidate = parts[parts.length - 2];
+      if (candidate.toLowerCase() != 'com' && candidate.toLowerCase() != 'android') {
+        return candidate[0].toUpperCase() + candidate.substring(1);
+      }
+    }
+    final label = parts.last;
+    return label[0].toUpperCase() + label.substring(1);
+  }
+
+  Widget _buildAppIcon(String packageName) {
+    final base64Icon = _appIconsMap[packageName];
+    if (base64Icon != null && base64Icon.isNotEmpty) {
+      try {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.memory(
+            base64Decode(base64Icon),
+            width: 38,
+            height: 38,
+            fit: BoxFit.contain,
+          ),
+        );
+      } catch (e) {
+        // fallback
+      }
+    }
+    final cleanName = _getCleanAppName(packageName);
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: AppColors.primaryAccent.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Center(
+        child: Text(
+          cleanName.isNotEmpty ? cleanName[0].toUpperCase() : 'A',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primaryAccent,
+            fontSize: 16,
+          ),
+        ),
       ),
     );
   }
