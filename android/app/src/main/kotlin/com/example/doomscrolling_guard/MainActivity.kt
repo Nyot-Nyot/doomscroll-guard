@@ -163,6 +163,23 @@ class MainActivity : FlutterActivity() {
         return pm.isIgnoringBatteryOptimizations(packageName)
     }
 
+    private fun drawableToBitmap(drawable: android.graphics.drawable.Drawable): android.graphics.Bitmap? {
+        if (drawable is android.graphics.drawable.BitmapDrawable) {
+            return drawable.bitmap
+        }
+        val width = if (drawable.intrinsicWidth <= 0) 100 else drawable.intrinsicWidth
+        val height = if (drawable.intrinsicHeight <= 0) 100 else drawable.intrinsicHeight
+        
+        val targetWidth = if (width > 120) 120 else width
+        val targetHeight = if (height > 120) 120 else height
+        
+        val bitmap = android.graphics.Bitmap.createBitmap(targetWidth, targetHeight, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        drawable.setBounds(0, 0, targetWidth, targetHeight)
+        drawable.draw(canvas)
+        return bitmap
+    }
+
     private fun getInstalledApps(context: Context): List<Map<String, String>> {
         val pm = context.packageManager
         val intent = Intent(Intent.ACTION_MAIN, null).apply {
@@ -177,7 +194,26 @@ class MainActivity : FlutterActivity() {
             val packageName = resolveInfo.activityInfo.packageName
             if (!uniquePackages.contains(packageName) && packageName != context.packageName) {
                 val appName = resolveInfo.loadLabel(pm).toString()
-                appList.add(mapOf("packageName" to packageName, "appName" to appName))
+                
+                var base64Icon = ""
+                try {
+                    val iconDrawable = resolveInfo.loadIcon(pm)
+                    val bitmap = drawableToBitmap(iconDrawable)
+                    if (bitmap != null) {
+                        val byteArrayOutputStream = java.io.ByteArrayOutputStream()
+                        bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+                        val byteArray = byteArrayOutputStream.toByteArray()
+                        base64Icon = android.util.Base64.encodeToString(byteArray, android.util.Base64.NO_WRAP)
+                    }
+                } catch (e: Exception) {
+                    // Fallback to empty if it fails
+                }
+
+                appList.add(mapOf(
+                    "packageName" to packageName,
+                    "appName" to appName,
+                    "appIcon" to base64Icon
+                ))
                 uniquePackages.add(packageName)
             }
         }

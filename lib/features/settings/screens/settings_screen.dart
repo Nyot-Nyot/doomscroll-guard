@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/services/native_monitoring_service.dart';
 import '../../../../shared/models/settings.dart';
-import '../../../../shared/theme/app_colors.dart';
+import '../../../../core/themes/app_colors.dart';
 import '../widgets/app_picker_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -17,6 +18,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Settings? _settings;
   bool _isTestMode = false;
   double _sliderValue = 20.0;
+  Map<String, String> _appNamesMap = {};
+  Map<String, String> _appIconsMap = {};
 
   @override
   void initState() {
@@ -24,7 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadSettings();
   }
 
-  void _loadSettings() {
+  Future<void> _loadSettings() async {
     final settings = LocalStorageService().getSettings();
     if (settings != null) {
       setState(() {
@@ -35,6 +38,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ? 20.0
             : settings.thresholdMinutes.toDouble().clamp(1.0, 60.0);
       });
+    }
+
+    try {
+      final apps = await NativeMonitoringService().getInstalledApps();
+      final Map<String, String> appNames = {};
+      final Map<String, String> appIcons = {};
+      for (final app in apps) {
+        final pkg = app['packageName'];
+        final name = app['appName'];
+        final icon = app['appIcon'];
+        if (pkg != null) {
+          if (name != null) appNames[pkg] = name;
+          if (icon != null) appIcons[pkg] = icon;
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _appNamesMap = appNames;
+          _appIconsMap = appIcons;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error caching app data: $e");
     }
   }
 
@@ -189,26 +215,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Mode Uji Coba (10 Detik)',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Mode Uji Coba (10 Detik)',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Gunakan batas 10 detik agar mudah dites.',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
+                              SizedBox(height: 2),
+                              Text(
+                                'Gunakan batas 10 detik agar mudah dites.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         Switch(
                           value: _isTestMode,
@@ -335,14 +363,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           itemCount: targetApps.length,
                           itemBuilder: (context, index) {
                             final pkg = targetApps[index];
-                            final parts = pkg.split('.');
-                            final label = parts.last.toUpperCase();
+                            final cleanName = _getCleanAppName(pkg);
 
                             return Container(
                               margin: const EdgeInsets.only(right: 8),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
-                                vertical: 8,
+                                vertical: 6,
                               ),
                               decoration: BoxDecoration(
                                 color: AppColors.background,
@@ -352,15 +379,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   width: 1,
                                 ),
                               ),
-                              child: Center(
-                                child: Text(
-                                  label,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primaryAccent,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildSmallAppIcon(pkg),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    cleanName,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primaryAccent,
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             );
                           },
@@ -395,6 +427,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getCleanAppName(String packageName) {
+    if (_appNamesMap.containsKey(packageName)) {
+      return _appNamesMap[packageName]!;
+    }
+    // Fallbacks
+    if (packageName == 'com.instagram.android') return 'Instagram';
+    if (packageName == 'com.zhiliaoapp.musically') return 'TikTok';
+    
+    final parts = packageName.split('.');
+    if (parts.length >= 2) {
+      final candidate = parts[parts.length - 2];
+      if (candidate.toLowerCase() != 'com' && candidate.toLowerCase() != 'android') {
+        return candidate[0].toUpperCase() + candidate.substring(1);
+      }
+    }
+    final label = parts.last;
+    return label[0].toUpperCase() + label.substring(1);
+  }
+
+  Widget _buildSmallAppIcon(String packageName) {
+    final base64Icon = _appIconsMap[packageName];
+    if (base64Icon != null && base64Icon.isNotEmpty) {
+      try {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: Image.memory(
+            base64Decode(base64Icon),
+            width: 18,
+            height: 18,
+            fit: BoxFit.contain,
+          ),
+        );
+      } catch (e) {
+        // fallback
+      }
+    }
+    final cleanName = _getCleanAppName(packageName);
+    return Container(
+      width: 18,
+      height: 18,
+      decoration: const BoxDecoration(
+        color: AppColors.primaryAccent,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          cleanName.isNotEmpty ? cleanName[0].toUpperCase() : 'A',
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
       ),

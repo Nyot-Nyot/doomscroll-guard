@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/services/native_monitoring_service.dart';
 import '../../../../shared/models/settings.dart';
-import '../../../../shared/theme/app_colors.dart';
+import '../../../../core/themes/app_colors.dart';
 
 class AppPickerSheet extends StatefulWidget {
   const AppPickerSheet({
@@ -235,22 +236,7 @@ class _AppPickerSheetState extends State<AppPickerSheet> {
                             ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                              leading: CircleAvatar(
-                                radius: 20,
-                                backgroundColor: isSelected
-                                    ? AppColors.primaryAccent
-                                    : AppColors.surface,
-                                child: Text(
-                                  appName.isNotEmpty ? appName[0].toUpperCase() : 'A',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : AppColors.primaryAccent,
-                                  ),
-                                ),
-                              ),
+                              leading: _buildAppIcon(app, isSelected),
                               title: Text(
                                 appName,
                                 style: const TextStyle(
@@ -299,6 +285,48 @@ class _AppPickerSheetState extends State<AppPickerSheet> {
                       ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAppIcon(Map<String, String> app, bool isSelected) {
+    final String? base64Icon = app['appIcon'];
+    final String appName = app['appName'] ?? '';
+    
+    if (base64Icon != null && base64Icon.isNotEmpty) {
+      try {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.memory(
+            base64Decode(base64Icon),
+            width: 38,
+            height: 38,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => _buildPlaceholderIcon(appName, isSelected),
+          ),
+        );
+      } catch (e) {
+        // fallback
+      }
+    }
+    return _buildPlaceholderIcon(appName, isSelected);
+  }
+
+  Widget _buildPlaceholderIcon(String appName, bool isSelected) {
+    return CircleAvatar(
+      radius: 19,
+      backgroundColor: isSelected
+          ? AppColors.primaryAccent
+          : AppColors.surface,
+      child: Text(
+        appName.isNotEmpty ? appName[0].toUpperCase() : 'A',
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          color: isSelected
+              ? Colors.white
+              : AppColors.primaryAccent,
+        ),
       ),
     );
   }

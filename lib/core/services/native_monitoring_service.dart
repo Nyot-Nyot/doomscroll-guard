@@ -69,6 +69,7 @@ class NativeMonitoringService {
         return {
           'packageName': map['packageName']?.toString() ?? '',
           'appName': map['appName']?.toString() ?? '',
+          'appIcon': map['appIcon']?.toString() ?? '',
         };
       }).toList();
     } catch (e) {
