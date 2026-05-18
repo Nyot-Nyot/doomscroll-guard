@@ -20,6 +20,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Timer? _timer;
   Map<String, String> _appNamesMap = {};
   Map<String, String> _appIconsMap = {};
+  Map<String, int> _activeSessions = {};
 
   @override
   void initState() {
@@ -65,6 +66,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final longestSession = state['longestSession'] ?? 0;
     final stats = await NativeMonitoringService().getUsageStats();
 
+    final activeSessionsRaw = state['activeSessions'] as Map?;
+    final Map<String, int> activeSessions = {};
+    if (activeSessionsRaw != null) {
+      activeSessionsRaw.forEach((key, value) {
+        activeSessions[key.toString()] = (value as num).toInt();
+      });
+    }
+
     await LocalStorageService().syncNativeUsage(stats, warningCount);
 
     if (mounted) {
@@ -73,6 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _warningCount = warningCount;
         _longestSessionMs = longestSession;
         _usageStats = stats;
+        _activeSessions = activeSessions;
       });
     }
   }
@@ -290,9 +300,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       color: AppColors.secondaryAccent.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'Batas: 10s',
-                      style: TextStyle(
+                    child: Text(
+                      'Batas: ${settings?.thresholdMinutes == 0 ? "10s" : "${settings?.thresholdMinutes ?? 20}m"}',
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: AppColors.secondaryAccent,
@@ -302,7 +312,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              if (_usageStats.isEmpty)
+              if (_activeSessions.isEmpty)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24.0),
@@ -322,10 +332,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 )
               else
-                ..._usageStats.entries.map((e) {
+                ..._activeSessions.entries.map((e) {
                   final appLabel = _getCleanAppName(e.key);
-                  // Threshold for testing is 10 seconds (10000ms)
-                  final double progress = (e.value / 10000.0).clamp(0.0, 1.0);
+                  final int thresholdMinutes = settings?.thresholdMinutes ?? 20;
+                  final double limitMs = thresholdMinutes == 0
+                      ? 10000.0
+                      : (thresholdMinutes * 60 * 1000).toDouble();
+                  final double progress = (e.value / limitMs).clamp(0.0, 1.0);
                   final bool isCloseToLimit = progress >= 0.8;
 
                   return Container(

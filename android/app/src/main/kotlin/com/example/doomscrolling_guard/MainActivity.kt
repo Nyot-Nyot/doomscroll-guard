@@ -84,10 +84,18 @@ class MainActivity : FlutterActivity() {
                     result.success(true)
                 }
                 "getMonitoringState" -> {
+                    val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
+                    val targetApps = prefs.getStringSet("targetApps", emptySet()) ?: emptySet()
+                    val activeSessionsMap = mutableMapOf<String, Long>()
+                    for (app in targetApps) {
+                        activeSessionsMap[app] = SessionManager.getCurrentSessionDuration(app)
+                    }
+
                     result.success(mapOf(
                         "isRunning" to MonitoringService.isRunning,
                         "warningCount" to SessionManager.getWarningCountToday(),
-                        "longestSession" to SessionManager.getLongestSessionToday()
+                        "longestSession" to SessionManager.getLongestSessionToday(),
+                        "activeSessions" to activeSessionsMap
                     ))
                 }
                 "getUsageStats" -> {
