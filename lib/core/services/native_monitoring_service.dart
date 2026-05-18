@@ -20,13 +20,17 @@ class NativeMonitoringService {
     }
   }
   
-  Future<bool> getMonitoringState() async {
+  Future<Map<String, dynamic>> getMonitoringState() async {
     try {
       final Map<dynamic, dynamic>? result = await _channel.invokeMethod('getMonitoringState');
-      return result?['isRunning'] ?? false;
+      if (result == null) return {'isRunning': false, 'warningCount': 0};
+      return {
+        'isRunning': result['isRunning'] ?? false,
+        'warningCount': result['warningCount'] ?? 0,
+      };
     } catch (e) {
       debugPrint("Error getting state: $e");
-      return false;
+      return {'isRunning': false, 'warningCount': 0};
     }
   }
 

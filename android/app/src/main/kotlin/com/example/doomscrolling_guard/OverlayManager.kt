@@ -21,6 +21,7 @@ object OverlayManager {
         }
         
         SessionManager.isInterventionActive = true
+        SessionManager.incrementWarningCount()
 
         if (Settings.canDrawOverlays(context)) {
             Log.i("DoomscrollGuard", "OverlayManager: Displaying overlay for $packageName")

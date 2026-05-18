@@ -94,6 +94,29 @@ object SessionManager {
         return 0L
     }
 
+    private val warningCountMap = mutableMapOf<String, Int>()
+
+    private fun getDayKey(): String {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return calendar.timeInMillis.toString()
+    }
+
+    fun getWarningCountToday(): Int {
+        return warningCountMap[getDayKey()] ?: 0
+    }
+
+    fun incrementWarningCount() {
+        val key = getDayKey()
+        val current = warningCountMap[key] ?: 0
+        warningCountMap[key] = current + 1
+        Log.i("DoomscrollGuard", "SessionManager: warningCount incremented to ${current + 1} for $key")
+    }
+
     var snoozeUntil: Long = 0L
     var gracePeriodUntil: Long = 0L
     var isInterventionActive: Boolean = false

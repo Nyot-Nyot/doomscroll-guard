@@ -72,7 +72,10 @@ class MainActivity : FlutterActivity() {
                     result.success(true)
                 }
                 "getMonitoringState" -> {
-                    result.success(mapOf("isRunning" to MonitoringService.isRunning))
+                    result.success(mapOf(
+                        "isRunning" to MonitoringService.isRunning,
+                        "warningCount" to SessionManager.getWarningCountToday()
+                    ))
                 }
                 "getUsageStats" -> {
                     val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)

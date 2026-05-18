@@ -28,7 +28,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _fetchState() async {
-    final isRunning = await NativeMonitoringService().getMonitoringState();
+    final state = await NativeMonitoringService().getMonitoringState();
+    final isRunning = state['isRunning'] ?? false;
     final stats = await NativeMonitoringService().getUsageStats();
     if (mounted) {
       setState(() {
