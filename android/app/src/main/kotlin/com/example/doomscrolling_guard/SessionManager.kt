@@ -8,41 +8,12 @@ import java.util.Calendar
 object SessionManager {
     var currentSessionApp: String? = null
     var sessionStartTime: Long = 0L
+    var sessionStartAndroidUsage: Long = 0L
 
     // Tracks the monotonic maximum reported usage so far for a specific day, preventing drops.
     private val maxUsageReported = mutableMapOf<String, Long>()
 
-    fun onAppOpened(context: Context, packageName: String) {
-        if (currentSessionApp != packageName) {
-            if (currentSessionApp != null) {
-                onAppClosed(context, currentSessionApp!!)
-            }
-
-            Log.i("DoomscrollGuard", "SessionManager: Started tracking $packageName")
-            currentSessionApp = packageName
-            sessionStartTime = System.currentTimeMillis()
-        }
-    }
-
-    fun onAppClosed(context: Context, packageName: String? = currentSessionApp) {
-        if (packageName != null && currentSessionApp == packageName) {
-            val durationMs = System.currentTimeMillis() - sessionStartTime
-            Log.i("DoomscrollGuard", "SessionManager: Ended tracking $packageName. Session lasted ${durationMs}ms")
-            
-            // To be instantly accurate on close, we force an update of the monotonic value 
-            // by calling getRealtimeDailyUsage right when it closes.
-            getRealtimeDailyUsage(context, packageName, isClosing = true)
-
-            currentSessionApp = null
-            sessionStartTime = 0L
-        }
-    }
-
-    fun getDailyUsageStats(context: Context, packageName: String): Long {
-        return getRealtimeDailyUsage(context, packageName)
-    }
-
-    fun getRealtimeDailyUsage(context: Context, packageName: String, isClosing: Boolean = false): Long {
+    private fun getAndroidUsageToday(context: Context, packageName: String): Long {
         val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         
         val calendar = Calendar.getInstance().apply {
@@ -54,32 +25,66 @@ object SessionManager {
         val startTime = calendar.timeInMillis
         val endTime = System.currentTimeMillis()
 
-        val stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startTime, endTime)
-        val packageStat = stats?.find { it.packageName == packageName }
+        val statsMap = usageStatsManager.queryAndAggregateUsageStats(startTime, endTime)
+        val packageStat = statsMap[packageName]
         
-        val androidUsageTime = packageStat?.totalTimeInForeground ?: 0L
-        
-        var currentOngoingMs = 0L
-        if (currentSessionApp == packageName) {
-            currentOngoingMs = System.currentTimeMillis() - sessionStartTime
+        return packageStat?.totalTimeInForeground ?: 0L
+    }
+
+    fun onAppOpened(context: Context, packageName: String) {
+        if (currentSessionApp != packageName) {
+            if (currentSessionApp != null) {
+                onAppClosed(context, currentSessionApp!!)
+            }
+
+            Log.i("DoomscrollGuard", "SessionManager: Started tracking $packageName")
+            currentSessionApp = packageName
+            sessionStartTime = System.currentTimeMillis()
+            sessionStartAndroidUsage = getAndroidUsageToday(context, packageName)
         }
+    }
 
-        // calculated incorporates the slowly-updating androidUsageTime + our live session Ms
-        val calculated = androidUsageTime + currentOngoingMs
+    fun onAppClosed(context: Context, packageName: String? = currentSessionApp) {
+        if (packageName != null && currentSessionApp == packageName) {
+            val durationMs = System.currentTimeMillis() - sessionStartTime
+            Log.i("DoomscrollGuard", "SessionManager: Ended tracking $packageName. Session lasted ${durationMs}ms")
+            
+            // To be instantly accurate on close, we force an update of the monotonic value 
+            getRealtimeDailyUsage(context, packageName, isClosing = true)
 
+            currentSessionApp = null
+            sessionStartTime = 0L
+            sessionStartAndroidUsage = 0L
+        }
+    }
+
+    fun getDailyUsageStats(context: Context, packageName: String): Long {
+        return getRealtimeDailyUsage(context, packageName)
+    }
+
+    fun getRealtimeDailyUsage(context: Context, packageName: String, isClosing: Boolean = false): Long {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
         val dayKey = "${packageName}_${calendar.timeInMillis}"
-        val maxSeenToday = maxUsageReported[dayKey] ?: 0L
-        
-        // Ensure monotonic guarantee: do not drop time if androidUsageTime hasn't caught up
-        var finalReport = maxOf(calculated, maxSeenToday)
-        
-        // If we are actively closing, the final duration is exactly accounted for, so we must bake it into maxSeen
-        if (isClosing) {
-            finalReport = maxOf(maxSeenToday + currentOngoingMs, androidUsageTime)
-        }
 
-        maxUsageReported[dayKey] = finalReport
-        return finalReport
+        if (currentSessionApp == packageName) {
+            val currentOngoingMs = System.currentTimeMillis() - sessionStartTime
+            val calculated = sessionStartAndroidUsage + currentOngoingMs
+            val maxSeenToday = maxUsageReported[dayKey] ?: 0L
+            val finalReport = maxOf(calculated, maxSeenToday)
+            maxUsageReported[dayKey] = finalReport
+            return finalReport
+        } else {
+            val androidUsageTime = getAndroidUsageToday(context, packageName)
+            val maxSeenToday = maxUsageReported[dayKey] ?: 0L
+            val finalReport = maxOf(androidUsageTime, maxSeenToday)
+            maxUsageReported[dayKey] = finalReport
+            return finalReport
+        }
     }
 
     var snoozeUntil: Long = 0L
