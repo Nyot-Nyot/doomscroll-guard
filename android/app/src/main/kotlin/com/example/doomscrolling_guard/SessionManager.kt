@@ -81,4 +81,33 @@ object SessionManager {
         maxUsageReported[dayKey] = finalReport
         return finalReport
     }
+
+    var snoozeUntil: Long = 0L
+    var gracePeriodUntil: Long = 0L
+
+    fun snooze(minutes: Int) {
+        snoozeUntil = System.currentTimeMillis() + minutes * 60 * 1000L
+        Log.i("DoomscrollGuard", "SessionManager: Snoozed until $snoozeUntil (${minutes} mins)")
+    }
+
+    fun grantGracePeriod(minutes: Int) {
+        gracePeriodUntil = System.currentTimeMillis() + minutes * 60 * 1000L
+        Log.i("DoomscrollGuard", "SessionManager: Grace period granted until $gracePeriodUntil (${minutes} mins)")
+    }
+
+    fun isSnoozed(): Boolean {
+        return System.currentTimeMillis() < snoozeUntil
+    }
+
+    fun isGraceActive(): Boolean {
+        return System.currentTimeMillis() < gracePeriodUntil
+    }
+
+    fun resetSessionState() {
+        currentSessionApp = null
+        sessionStartTime = 0L
+        snoozeUntil = 0L
+        gracePeriodUntil = 0L
+        Log.i("DoomscrollGuard", "SessionManager: Session state reset")
+    }
 }
