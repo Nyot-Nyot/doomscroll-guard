@@ -14,10 +14,8 @@ object ThresholdEngine {
             return false
         }
 
-        val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
-        val limitMinutes = prefs.getInt("thresholdMinutes", 20)
-        // Convert to ms
-        val limitMs = limitMinutes * 60 * 1000L
+        // For testing: Hardcode limit to 10 seconds (10 * 1000L)
+        val limitMs = 10 * 1000L
         
         val sessionDurationMs = SessionManager.getCurrentSessionDuration(packageName)
         

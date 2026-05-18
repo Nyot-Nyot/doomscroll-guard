@@ -99,8 +99,9 @@ object SessionManager {
     var isInterventionActive: Boolean = false
 
     fun snooze(minutes: Int) {
-        snoozeUntil = System.currentTimeMillis() + minutes * 60 * 1000L
-        Log.i("DoomscrollGuard", "SessionManager: Snoozed until $snoozeUntil (${minutes} mins)")
+        // For testing: Hardcode snooze to 5 seconds (5 * 1000L)
+        snoozeUntil = System.currentTimeMillis() + 5 * 1000L
+        Log.i("DoomscrollGuard", "SessionManager: Snoozed until $snoozeUntil (5 seconds for testing)")
     }
 
     fun grantGracePeriod(minutes: Int) {
