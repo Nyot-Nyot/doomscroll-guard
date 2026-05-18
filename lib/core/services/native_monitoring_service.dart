@@ -12,6 +12,14 @@ class NativeMonitoringService {
     }
   }
 
+  Future<void> updateServiceConfig(List<String> targetApps, int thresholdMinutes) async {
+    try {
+      await _channel.invokeMethod('updateServiceConfig', {'targetApps': targetApps, 'thresholdMinutes': thresholdMinutes});
+    } catch (e) {
+      debugPrint("Error updating service config: $e");
+    }
+  }
+
   Future<void> stopService() async {
     try {
       await _channel.invokeMethod('stopService');
