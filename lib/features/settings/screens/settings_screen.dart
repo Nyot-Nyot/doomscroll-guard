@@ -89,7 +89,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => AppPickerSheet(
-        currentSettings: _settings!,
+        title: 'Pilih Aplikasi Target',
+        initialSelectedApps: _settings!.targetApps,
         onSaved: (selectedApps) {
           final updated = _settings!.copyWith(targetApps: selectedApps);
           _saveSettings(updated);
