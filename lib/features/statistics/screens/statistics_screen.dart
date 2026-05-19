@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
+import 'package:doomscrolling_guard/core/services/native_monitoring_service.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
 import 'package:doomscrolling_guard/shared/models/daily_usage.dart';
 
@@ -14,14 +15,52 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   late List<DateTime> _last7Days;
   List<DailyUsage?> _dailyUsageHistory = [];
   bool _isLoading = true;
+  Map<String, String> _appNamesMap = {};
 
   @override
   void initState() {
     super.initState();
+    _loadAppMetaData();
     _loadHistory();
   }
 
-  void _loadHistory() {
+  Future<void> _loadAppMetaData() async {
+    try {
+      final apps = await NativeMonitoringService().getInstalledApps();
+      final Map<String, String> appNames = {};
+      for (final app in apps) {
+        final pkg = app['packageName'];
+        final name = app['appName'];
+        if (pkg != null && name != null) {
+          appNames[pkg] = name;
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _appNamesMap = appNames;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading app metadata: $e");
+    }
+  }
+
+  Future<void> _loadHistory() async {
+    try {
+      final state = await NativeMonitoringService().getMonitoringState();
+      final warningCount = state['warningCount'] ?? 0;
+      final stats = await NativeMonitoringService().getUsageStats();
+      
+      final Map<String, int> typedStats = {};
+      stats.forEach((key, value) {
+        typedStats[key.toString()] = (value as num).toInt();
+      });
+
+      await LocalStorageService().syncNativeUsage(typedStats, warningCount);
+    } catch (e) {
+      debugPrint("Error syncing native stats in statistics: $e");
+    }
+
     final today = DateTime.now();
     _last7Days = List.generate(7, (index) {
       return DateTime(today.year, today.month, today.day).subtract(Duration(days: index));
@@ -94,7 +133,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         todayTotalSeconds += seconds;
         if (seconds > topAppSeconds) {
           topAppSeconds = seconds;
-          topAppLabel = app.split('.').last;
+          topAppLabel = _getCleanAppName(app);
         }
       });
     }
@@ -426,5 +465,24 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         ),
       ),
     );
+  }
+
+  String _getCleanAppName(String packageName) {
+    if (_appNamesMap.containsKey(packageName)) {
+      return _appNamesMap[packageName]!;
+    }
+    // Fallbacks
+    if (packageName == 'com.instagram.android') return 'Instagram';
+    if (packageName == 'com.zhiliaoapp.musically') return 'TikTok';
+    
+    final parts = packageName.split('.');
+    if (parts.length >= 2) {
+      final candidate = parts[parts.length - 2];
+      if (candidate.toLowerCase() != 'com' && candidate.toLowerCase() != 'android') {
+        return candidate[0].toUpperCase() + candidate.substring(1);
+      }
+    }
+    final label = parts.last;
+    return label[0].toUpperCase() + label.substring(1);
   }
 }

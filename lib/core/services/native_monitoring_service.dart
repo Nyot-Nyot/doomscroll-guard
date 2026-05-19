@@ -12,6 +12,14 @@ class NativeMonitoringService {
     }
   }
 
+  Future<void> updateServiceConfig(List<String> targetApps, int thresholdMinutes) async {
+    try {
+      await _channel.invokeMethod('updateServiceConfig', {'targetApps': targetApps, 'thresholdMinutes': thresholdMinutes});
+    } catch (e) {
+      debugPrint("Error updating service config: $e");
+    }
+  }
+
   Future<void> stopService() async {
     try {
       await _channel.invokeMethod('stopService');
@@ -49,6 +57,24 @@ class NativeMonitoringService {
     } catch (e) {
       debugPrint("Error getting usage stats: $e");
       return {};
+    }
+  }
+
+  Future<List<Map<String, String>>> getInstalledApps() async {
+    try {
+      final List<dynamic>? result = await _channel.invokeMethod('getInstalledApps');
+      if (result == null) return [];
+      return result.map((item) {
+        final Map<dynamic, dynamic> map = item as Map<dynamic, dynamic>;
+        return {
+          'packageName': map['packageName']?.toString() ?? '',
+          'appName': map['appName']?.toString() ?? '',
+          'appIcon': map['appIcon']?.toString() ?? '',
+        };
+      }).toList();
+    } catch (e) {
+      debugPrint("Error getting installed apps: $e");
+      return [];
     }
   }
 }

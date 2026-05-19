@@ -129,11 +129,8 @@ class LocalStorageService {
       await saveTodayUsage(
         DailyUsage(
           date: DateTime.now(),
-          usageSecondsByApp: const {
-            'com.instagram.android': 120,
-            'com.zhiliaoapp.musically': 90,
-          },
-          warningCount: 1,
+          usageSecondsByApp: const {},
+          warningCount: 0,
         ),
       );
     }
