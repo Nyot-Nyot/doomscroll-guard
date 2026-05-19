@@ -42,8 +42,36 @@ object SessionManager {
             
             prefs.edit().putLong(baseKey, baseUsage + elapsedMs).apply()
 
+            // Update longest session
+            val key = getDayKey()
+            val storedMax = longestSessionMap[key] ?: 0L
+            longestSessionMap[key] = maxOf(elapsedMs, storedMax)
+
             currentSessionApp = null
             sessionStartTime = 0L
+        }
+    }
+
+    fun persistCurrentSessionTime(context: Context) {
+        val app = currentSessionApp
+        if (app != null && sessionStartTime > 0L) {
+            val elapsedMs = System.currentTimeMillis() - sessionStartTime
+            
+            // 1. Update daily usage
+            val todayStart = getTodayStartMillis()
+            val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
+            val baseKey = "usage_${app}_$todayStart"
+            val baseUsage = prefs.getLong(baseKey, 0L)
+            prefs.edit().putLong(baseKey, baseUsage + elapsedMs).apply()
+            Log.i("DoomscrollGuard", "SessionManager: Persisted ongoing session for $app of ${elapsedMs}ms. New daily total: ${baseUsage + elapsedMs}ms")
+            
+            // 2. Update longest session
+            val key = getDayKey()
+            val storedMax = longestSessionMap[key] ?: 0L
+            longestSessionMap[key] = maxOf(elapsedMs, storedMax)
+            
+            // 3. Reset sessionStartTime to now so we only count new duration going forward
+            sessionStartTime = System.currentTimeMillis()
         }
     }
 
@@ -117,11 +145,13 @@ object SessionManager {
     fun snooze(minutes: Int) {
         // For testing: Hardcode snooze to 5 seconds (5 * 1000L)
         snoozeUntil = System.currentTimeMillis() + 5 * 1000L
+        sessionStartTime = System.currentTimeMillis() // Reset session duration start
         Log.i("DoomscrollGuard", "SessionManager: Snoozed until $snoozeUntil (5 seconds for testing)")
     }
 
     fun grantGracePeriod(minutes: Int) {
         gracePeriodUntil = System.currentTimeMillis() + minutes * 60 * 1000L
+        sessionStartTime = System.currentTimeMillis() // Reset session duration start
         Log.i("DoomscrollGuard", "SessionManager: Grace period granted until $gracePeriodUntil (${minutes} mins)")
     }
 
