@@ -70,11 +70,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final longestSession = state['longestSession'] ?? 0;
     final stats = await NativeMonitoringService().getUsageStats();
 
+    final Map<String, int> typedStats = {};
+    stats.forEach((key, value) {
+      typedStats[key.toString()] = (value as num).toInt();
+    });
+
     final activeSessionsRaw = state['activeSessions'] as Map?;
     final Map<String, int> activeSessions = {};
     if (activeSessionsRaw != null) {
       activeSessionsRaw.forEach((key, value) {
-        activeSessions[key.toString()] = (value as num).toInt();
+        final duration = (value as num).toInt();
+        if (duration > 0) {
+          activeSessions[key.toString()] = duration;
+        }
       });
     }
 
@@ -84,14 +92,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final whitelistAppsRaw = state['whitelistApps'] as List?;
     final List<String> whitelistApps = whitelistAppsRaw?.map((e) => e.toString()).toList() ?? [];
 
-    await LocalStorageService().syncNativeUsage(stats, warningCount);
+    await LocalStorageService().syncNativeUsage(typedStats, warningCount);
 
     if (mounted) {
       setState(() {
         _isRunning = isRunning;
         _warningCount = warningCount;
         _longestSessionMs = longestSession;
-        _usageStats = stats;
+        _usageStats = typedStats;
         _activeSessions = activeSessions;
         _isQuietHoursActive = isQuietHoursActive;
         _quietHoursStart = quietHoursStart;

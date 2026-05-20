@@ -35,6 +35,9 @@ object SessionManager {
             val elapsedMs = System.currentTimeMillis() - sessionStartTime
             Log.i("DoomscrollGuard", "SessionManager: Ended tracking $packageName. Session lasted ${elapsedMs}ms")
             
+            // Save last active session duration
+            lastSessionDurationMap[packageName] = elapsedMs
+            
             val todayStart = getTodayStartMillis()
             val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
             val baseKey = "usage_${packageName}_$todayStart"
@@ -56,6 +59,9 @@ object SessionManager {
         val app = currentSessionApp
         if (app != null && sessionStartTime > 0L) {
             val elapsedMs = System.currentTimeMillis() - sessionStartTime
+            
+            // Save last active session duration
+            lastSessionDurationMap[app] = elapsedMs
             
             // 1. Update daily usage
             val todayStart = getTodayStartMillis()
@@ -93,11 +99,13 @@ object SessionManager {
         }
     }
 
+    private val lastSessionDurationMap = mutableMapOf<String, Long>()
+
     fun getCurrentSessionDuration(packageName: String): Long {
         if (currentSessionApp == packageName && sessionStartTime > 0L) {
             return System.currentTimeMillis() - sessionStartTime
         }
-        return 0L
+        return lastSessionDurationMap[packageName] ?: 0L
     }
 
     private val warningCountMap = mutableMapOf<String, Int>()
