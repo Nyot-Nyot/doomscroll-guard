@@ -25,6 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _quietHoursStart = -1;
   int _quietHoursEnd = -1;
   List<String> _whitelistApps = [];
+  bool _isPaused = false;
 
   @override
   void initState() {
@@ -66,6 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _fetchState() async {
     final state = await NativeMonitoringService().getMonitoringState();
     final isRunning = state['isRunning'] ?? false;
+    final isPaused = state['isPaused'] ?? false;
     final warningCount = state['warningCount'] ?? 0;
     final longestSession = state['longestSession'] ?? 0;
     final stats = await NativeMonitoringService().getUsageStats();
@@ -97,6 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (mounted) {
       setState(() {
         _isRunning = isRunning;
+        _isPaused = isPaused;
         _warningCount = warningCount;
         _longestSessionMs = longestSession;
         _usageStats = typedStats;
@@ -192,9 +195,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            _isRunning ? Icons.shield_rounded : Icons.shield_outlined,
+                            _isRunning 
+                                ? (_isPaused ? Icons.pause_circle_filled_rounded : Icons.shield_rounded) 
+                                : Icons.shield_outlined,
                             size: 32,
-                            color: _isRunning ? AppColors.primaryAccent : AppColors.textSecondary,
+                            color: _isRunning 
+                                ? (_isPaused ? Colors.orange.shade700 : AppColors.primaryAccent) 
+                                : AppColors.textSecondary,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -203,7 +210,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _isRunning ? 'Sistem Aktif' : 'Sistem Nonaktif',
+                                _isRunning 
+                                    ? (_isPaused ? 'Pemantauan Dijeda' : 'Sistem Aktif') 
+                                    : 'Sistem Nonaktif',
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -213,7 +222,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 _isRunning 
-                                    ? 'Memantau scrolling habits Anda secara real-time.' 
+                                    ? (_isPaused ? 'Perlindungan layar sedang ditangguhkan.' : 'Memantau scrolling habits Anda secara real-time.') 
                                     : 'Aktifkan pemantauan untuk menjaga kesehatan digital.',
                                 style: const TextStyle(
                                   fontSize: 13,
@@ -312,20 +321,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 48,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isRunning ? Colors.white : AppColors.primaryAccent,
-                          foregroundColor: _isRunning ? Colors.red.shade700 : Colors.white,
+                          backgroundColor: !_isRunning
+                              ? AppColors.primaryAccent
+                              : (_isPaused ? AppColors.primaryAccent : Colors.orange.shade50),
+                          foregroundColor: !_isRunning
+                              ? Colors.white
+                              : (_isPaused ? Colors.white : Colors.orange.shade800),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: _isRunning 
-                                ? BorderSide(color: Colors.red.shade100, width: 1.5)
+                            side: _isRunning && !_isPaused
+                                ? BorderSide(color: Colors.orange.shade200, width: 1.5)
                                 : BorderSide.none,
                           ),
                         ),
                         onPressed: () async {
-                          if (_isRunning) {
-                            await NativeMonitoringService().stopService();
-                          } else {
+                          if (!_isRunning) {
                             final settings = LocalStorageService().getSettings();
                             await NativeMonitoringService().startService(
                               targetApps: settings?.targetApps ?? [],
@@ -334,16 +345,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               quietHoursStartMinutes: settings?.quietHoursStartMinutes ?? -1,
                               quietHoursEndMinutes: settings?.quietHoursEndMinutes ?? -1,
                             );
+                          } else {
+                            if (_isPaused) {
+                              await NativeMonitoringService().setMonitoringPaused(false);
+                            } else {
+                              await NativeMonitoringService().setMonitoringPaused(true);
+                            }
                           }
                           _fetchState(); // forcefully update state
                         },
-                        child: Text(
-                          _isRunning ? 'Hentikan Pemantauan' : 'Mulai Pemantauan',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: _isRunning ? Colors.red.shade700 : Colors.white,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_isRunning) ...[
+                              Icon(
+                                _isPaused ? Icons.play_circle_fill_rounded : Icons.pause_circle_filled_rounded,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Text(
+                              !_isRunning
+                                  ? 'Mulai Pemantauan'
+                                  : (_isPaused ? 'Lanjutkan Pemantauan' : 'Jeda Pemantauan'),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: !_isRunning
+                                    ? Colors.white
+                                    : (_isPaused ? Colors.white : Colors.orange.shade800),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -427,7 +460,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              if (_activeSessions.isEmpty)
+              if (_activeSessions.isEmpty || _isPaused)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24.0),
@@ -436,10 +469,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: AppColors.surface, width: 1),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      'Belum ada aktivitas scrolling terdeteksi.',
-                      style: TextStyle(
+                      _isPaused ? 'Pemantauan sedang dijeda.' : 'Belum ada aktivitas scrolling terdeteksi.',
+                      style: const TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary,
                       ),

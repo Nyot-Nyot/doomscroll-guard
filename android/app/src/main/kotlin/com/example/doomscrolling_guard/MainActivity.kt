@@ -92,9 +92,15 @@ class MainActivity : FlutterActivity() {
                     }
                     result.success(true)
                 }
+                "setMonitoringPaused" -> {
+                    val isPaused = call.argument<Boolean>("isPaused") ?: false
+                    MonitoringService.isPaused = isPaused
+                    result.success(true)
+                }
                 "stopService" -> {
                     val serviceIntent = Intent(context, MonitoringService::class.java)
                     context.stopService(serviceIntent)
+                    SessionManager.resetSessionState()
                     result.success(true)
                 }
                 "getMonitoringState" -> {
@@ -123,6 +129,7 @@ class MainActivity : FlutterActivity() {
 
                     result.success(mapOf(
                         "isRunning" to MonitoringService.isRunning,
+                        "isPaused" to MonitoringService.isPaused,
                         "warningCount" to SessionManager.getWarningCountToday(),
                         "longestSession" to SessionManager.getLongestSessionToday(),
                         "activeSessions" to activeSessionsMap,
