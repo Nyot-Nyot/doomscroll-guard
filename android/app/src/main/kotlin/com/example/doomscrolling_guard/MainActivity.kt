@@ -50,11 +50,18 @@ class MainActivity : FlutterActivity() {
                 "startService" -> {
                     val targetApps = call.argument<List<String>>("targetApps")
                     val thresholdMinutes = call.argument<Int>("thresholdMinutes") ?: 20
+                    val whitelistApps = call.argument<List<String>>("whitelistApps") ?: emptyList()
+                    val quietHoursStartMinutes = call.argument<Int>("quietHoursStartMinutes") ?: -1
+                    val quietHoursEndMinutes = call.argument<Int>("quietHoursEndMinutes") ?: -1
+
                     if (targetApps != null) {
                         val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
                         prefs.edit()
                             .putStringSet("targetApps", targetApps.toSet())
                             .putInt("thresholdMinutes", thresholdMinutes)
+                            .putStringSet("whitelistApps", whitelistApps.toSet())
+                            .putInt("quietHoursStart", quietHoursStartMinutes)
+                            .putInt("quietHoursEnd", quietHoursEndMinutes)
                             .apply()
                     }
 
@@ -69,11 +76,18 @@ class MainActivity : FlutterActivity() {
                 "updateServiceConfig" -> {
                     val targetApps = call.argument<List<String>>("targetApps")
                     val thresholdMinutes = call.argument<Int>("thresholdMinutes") ?: 20
+                    val whitelistApps = call.argument<List<String>>("whitelistApps") ?: emptyList()
+                    val quietHoursStartMinutes = call.argument<Int>("quietHoursStartMinutes") ?: -1
+                    val quietHoursEndMinutes = call.argument<Int>("quietHoursEndMinutes") ?: -1
+
                     if (targetApps != null) {
                         val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
                         prefs.edit()
                             .putStringSet("targetApps", targetApps.toSet())
                             .putInt("thresholdMinutes", thresholdMinutes)
+                            .putStringSet("whitelistApps", whitelistApps.toSet())
+                            .putInt("quietHoursStart", quietHoursStartMinutes)
+                            .putInt("quietHoursEnd", quietHoursEndMinutes)
                             .apply()
                     }
                     result.success(true)
@@ -86,16 +100,36 @@ class MainActivity : FlutterActivity() {
                 "getMonitoringState" -> {
                     val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
                     val targetApps = prefs.getStringSet("targetApps", emptySet()) ?: emptySet()
+                    val whitelistApps = prefs.getStringSet("whitelistApps", emptySet()) ?: emptySet()
+                    val quietHoursStart = prefs.getInt("quietHoursStart", -1)
+                    val quietHoursEnd = prefs.getInt("quietHoursEnd", -1)
+
                     val activeSessionsMap = mutableMapOf<String, Long>()
                     for (app in targetApps) {
                         activeSessionsMap[app] = SessionManager.getCurrentSessionDuration(app)
+                    }
+
+                    // Calculate if quiet hours are currently active
+                    var isQuietHoursActive = false
+                    if (quietHoursStart != -1 && quietHoursEnd != -1) {
+                        val calendar = java.util.Calendar.getInstance()
+                        val currentMinutes = calendar.get(java.util.Calendar.HOUR_OF_DAY) * 60 + calendar.get(java.util.Calendar.MINUTE)
+                        isQuietHoursActive = if (quietHoursStart <= quietHoursEnd) {
+                            currentMinutes in quietHoursStart..quietHoursEnd
+                        } else {
+                            currentMinutes >= quietHoursStart || currentMinutes <= quietHoursEnd
+                        }
                     }
 
                     result.success(mapOf(
                         "isRunning" to MonitoringService.isRunning,
                         "warningCount" to SessionManager.getWarningCountToday(),
                         "longestSession" to SessionManager.getLongestSessionToday(),
-                        "activeSessions" to activeSessionsMap
+                        "activeSessions" to activeSessionsMap,
+                        "isQuietHoursActive" to isQuietHoursActive,
+                        "quietHoursStart" to quietHoursStart,
+                        "quietHoursEnd" to quietHoursEnd,
+                        "whitelistApps" to whitelistApps.toList()
                     ))
                 }
                 "getUsageStats" -> {

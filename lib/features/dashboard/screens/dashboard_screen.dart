@@ -21,6 +21,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, String> _appNamesMap = {};
   Map<String, String> _appIconsMap = {};
   Map<String, int> _activeSessions = {};
+  bool _isQuietHoursActive = false;
+  int _quietHoursStart = -1;
+  int _quietHoursEnd = -1;
+  List<String> _whitelistApps = [];
 
   @override
   void initState() {
@@ -74,6 +78,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
     }
 
+    final isQuietHoursActive = state['isQuietHoursActive'] ?? false;
+    final quietHoursStart = state['quietHoursStart'] ?? -1;
+    final quietHoursEnd = state['quietHoursEnd'] ?? -1;
+    final whitelistAppsRaw = state['whitelistApps'] as List?;
+    final List<String> whitelistApps = whitelistAppsRaw?.map((e) => e.toString()).toList() ?? [];
+
     await LocalStorageService().syncNativeUsage(stats, warningCount);
 
     if (mounted) {
@@ -83,6 +93,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _longestSessionMs = longestSession;
         _usageStats = stats;
         _activeSessions = activeSessions;
+        _isQuietHoursActive = isQuietHoursActive;
+        _quietHoursStart = quietHoursStart;
+        _quietHoursEnd = quietHoursEnd;
+        _whitelistApps = whitelistApps;
       });
     }
   }
@@ -97,6 +111,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final minutes = (ms / 60000).floor();
     final seconds = ((ms % 60000) / 1000).floor();
     return "${minutes}m ${seconds}s";
+  }
+
+  String _formatMinutes(int minutes) {
+    if (minutes < 0) return '--:--';
+    final hour = minutes ~/ 60;
+    final minute = minutes % 60;
+    final hourStr = hour.toString().padLeft(2, '0');
+    final minuteStr = minute.toString().padLeft(2, '0');
+    return '$hourStr:$minuteStr';
   }
 
   @override
@@ -194,6 +217,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ],
                     ),
+                    if (_isRunning && ((_quietHoursStart != -1 && _quietHoursEnd != -1) || _whitelistApps.isNotEmpty)) ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.start,
+                          children: [
+                            if (_quietHoursStart != -1 && _quietHoursEnd != -1)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: _isQuietHoursActive
+                                      ? const Color(0xFFFDF2E9) // Amber/Gold soft background
+                                      : AppColors.background,
+                                  borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(
+                                    color: _isQuietHoursActive
+                                        ? const Color(0xFFF5B041).withOpacity(0.5)
+                                        : AppColors.surface,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _isQuietHoursActive ? Icons.nights_stay_rounded : Icons.nights_stay_outlined,
+                                      size: 14,
+                                      color: _isQuietHoursActive ? const Color(0xFFD35400) : AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _isQuietHoursActive
+                                          ? 'Jam Tenang Aktif'
+                                          : 'Jam Tenang (${_formatMinutes(_quietHoursStart)} - ${_formatMinutes(_quietHoursEnd)})',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: _isQuietHoursActive ? const Color(0xFFD35400) : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            if (_whitelistApps.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEBF5FB), // Blue soft background
+                                  borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(
+                                    color: const Color(0xFF5DADE2).withOpacity(0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.star_rounded,
+                                      size: 14,
+                                      color: Color(0xFF2980B9),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${_whitelistApps.length} Aplikasi Pengecualian',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2980B9),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
@@ -216,8 +320,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           } else {
                             final settings = LocalStorageService().getSettings();
                             await NativeMonitoringService().startService(
-                              settings?.targetApps ?? [],
-                              settings?.thresholdMinutes ?? 20,
+                              targetApps: settings?.targetApps ?? [],
+                              thresholdMinutes: settings?.thresholdMinutes ?? 20,
+                              whitelistApps: settings?.whitelistApps ?? [],
+                              quietHoursStartMinutes: settings?.quietHoursStartMinutes ?? -1,
+                              quietHoursEndMinutes: settings?.quietHoursEndMinutes ?? -1,
                             );
                           }
                           _fetchState(); // forcefully update state
