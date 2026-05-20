@@ -75,8 +75,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isRunning = state['isRunning'] ?? false;
     if (isRunning) {
       await NativeMonitoringService().updateServiceConfig(
-        updatedSettings.targetApps,
-        updatedSettings.thresholdMinutes,
+        targetApps: updatedSettings.targetApps,
+        thresholdMinutes: updatedSettings.thresholdMinutes,
+        whitelistApps: updatedSettings.whitelistApps,
+        quietHoursStartMinutes: updatedSettings.quietHoursStartMinutes,
+        quietHoursEndMinutes: updatedSettings.quietHoursEndMinutes,
       );
     }
   }
@@ -89,13 +92,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => AppPickerSheet(
-        currentSettings: _settings!,
+        title: 'Pilih Aplikasi Target',
+        initialSelectedApps: _settings!.targetApps,
         onSaved: (selectedApps) {
           final updated = _settings!.copyWith(targetApps: selectedApps);
           _saveSettings(updated);
         },
       ),
     );
+  }
+
+  void _showWhitelistAppPicker() {
+    if (_settings == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AppPickerSheet(
+        title: 'Pilih Aplikasi Whitelist',
+        initialSelectedApps: _settings!.whitelistApps,
+        onSaved: (selectedApps) {
+          final updated = _settings!.copyWith(whitelistApps: selectedApps);
+          _saveSettings(updated);
+        },
+      ),
+    );
+  }
+
+  TimeOfDay _minutesToTime(int minutes) {
+    if (minutes < 0) return const TimeOfDay(hour: 22, minute: 0);
+    final hour = minutes ~/ 60;
+    final minute = minutes % 60;
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  int _timeToMinutes(TimeOfDay time) {
+    return time.hour * 60 + time.minute;
+  }
+
+  String _formatMinutes(int minutes) {
+    if (minutes < 0) return '--:--';
+    final hour = minutes ~/ 60;
+    final minute = minutes % 60;
+    final hourStr = hour.toString().padLeft(2, '0');
+    final minuteStr = minute.toString().padLeft(2, '0');
+    return '$hourStr:$minuteStr';
   }
 
   @override
@@ -423,6 +465,315 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
+                  ],
+                ),
+              ),
+
+              // Card 3: Whitelisted / Exception Apps
+              const SizedBox(height: 24),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.star_rounded,
+                          color: AppColors.primaryAccent,
+                          size: 22,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Aplikasi Pengecualian',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Aplikasi terpilih tidak akan memicu peringatan intervensi meskipun durasi scrolling terlampaui.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // App Initial list
+                    if (_settings!.whitelistApps.isNotEmpty) ...[
+                      SizedBox(
+                        height: 40,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _settings!.whitelistApps.length,
+                          itemBuilder: (context, index) {
+                            final pkg = _settings!.whitelistApps[index];
+                            final cleanName = _getCleanAppName(pkg);
+
+                            return Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.surface,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildSmallAppIcon(pkg),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    cleanName,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primaryAccent,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryAccent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        onPressed: _showWhitelistAppPicker,
+                        child: const Text(
+                          'Atur Aplikasi Whitelist',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Card 4: Quiet Hours (Jam Tenang)
+              const SizedBox(height: 24),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Expanded(
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.nights_stay_rounded,
+                                color: AppColors.primaryAccent,
+                                size: 22,
+                              ),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Jam Tenang (Quiet Hours)',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: _settings!.quietHoursStartMinutes != -1,
+                          activeColor: AppColors.primaryAccent,
+                          onChanged: (value) {
+                            if (value) {
+                              // Enable with default 22:00 - 06:00 (1320 - 360)
+                              final updated = _settings!.copyWith(
+                                quietHoursStartMinutes: 1320,
+                                quietHoursEndMinutes: 360,
+                              );
+                              _saveSettings(updated);
+                            } else {
+                              // Disable quiet hours (-1, -1)
+                              final updated = _settings!.copyWith(
+                                quietHoursStartMinutes: -1,
+                                quietHoursEndMinutes: -1,
+                              );
+                              _saveSettings(updated);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Jeda peringatan intervensi secara otomatis pada rentang waktu yang Anda tentukan.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    if (_settings!.quietHoursStartMinutes != -1) ...[
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final initialTime = _minutesToTime(_settings!.quietHoursStartMinutes);
+                                final selected = await showTimePicker(
+                                  context: context,
+                                  initialTime: initialTime,
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: Theme.of(context).copyWith(
+                                        colorScheme: const ColorScheme.light(
+                                          primary: AppColors.primaryAccent,
+                                          onPrimary: Colors.white,
+                                          onSurface: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
+                                );
+                                if (selected != null) {
+                                  final updated = _settings!.copyWith(
+                                    quietHoursStartMinutes: _timeToMinutes(selected),
+                                  );
+                                  _saveSettings(updated);
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.background,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Mulai',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _formatMinutes(_settings!.quietHoursStartMinutes),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primaryAccent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final initialTime = _minutesToTime(_settings!.quietHoursEndMinutes);
+                                final selected = await showTimePicker(
+                                  context: context,
+                                  initialTime: initialTime,
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: Theme.of(context).copyWith(
+                                        colorScheme: const ColorScheme.light(
+                                          primary: AppColors.primaryAccent,
+                                          onPrimary: Colors.white,
+                                          onSurface: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
+                                );
+                                if (selected != null) {
+                                  final updated = _settings!.copyWith(
+                                    quietHoursEndMinutes: _timeToMinutes(selected),
+                                  );
+                                  _saveSettings(updated);
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.background,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Selesai',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _formatMinutes(_settings!.quietHoursEndMinutes),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primaryAccent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

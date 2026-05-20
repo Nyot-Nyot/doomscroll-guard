@@ -9,11 +9,13 @@ import '../../../../core/themes/app_colors.dart';
 class AppPickerSheet extends StatefulWidget {
   const AppPickerSheet({
     super.key,
-    required this.currentSettings,
+    required this.title,
+    required this.initialSelectedApps,
     required this.onSaved,
   });
 
-  final Settings currentSettings;
+  final String title;
+  final List<String> initialSelectedApps;
   final ValueChanged<List<String>> onSaved;
 
   @override
@@ -31,7 +33,7 @@ class _AppPickerSheetState extends State<AppPickerSheet> {
   @override
   void initState() {
     super.initState();
-    _selectedApps.addAll(widget.currentSettings.targetApps);
+    _selectedApps.addAll(widget.initialSelectedApps);
     _loadApps();
   }
 
@@ -107,9 +109,9 @@ class _AppPickerSheetState extends State<AppPickerSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Pilih Aplikasi Target',
-                  style: TextStyle(
+                Text(
+                  widget.title,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,

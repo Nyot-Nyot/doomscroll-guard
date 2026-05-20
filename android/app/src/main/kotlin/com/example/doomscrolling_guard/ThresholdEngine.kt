@@ -15,6 +15,31 @@ object ThresholdEngine {
         }
 
         val prefs = context.getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
+        
+        // 1. Whitelist Check
+        val whitelistApps = prefs.getStringSet("whitelistApps", emptySet()) ?: emptySet()
+        if (whitelistApps.contains(packageName)) {
+            Log.i("DoomscrollGuard", "ThresholdEngine: App $packageName is whitelisted, skipping intervention.")
+            return false
+        }
+
+        // 2. Quiet Hours Check
+        val quietHoursStart = prefs.getInt("quietHoursStart", -1)
+        val quietHoursEnd = prefs.getInt("quietHoursEnd", -1)
+        if (quietHoursStart != -1 && quietHoursEnd != -1) {
+            val calendar = java.util.Calendar.getInstance()
+            val currentMinutes = calendar.get(java.util.Calendar.HOUR_OF_DAY) * 60 + calendar.get(java.util.Calendar.MINUTE)
+            val isQuietHoursActive = if (quietHoursStart <= quietHoursEnd) {
+                currentMinutes in quietHoursStart..quietHoursEnd
+            } else {
+                currentMinutes >= quietHoursStart || currentMinutes <= quietHoursEnd
+            }
+            if (isQuietHoursActive) {
+                Log.i("DoomscrollGuard", "ThresholdEngine: Quiet hours active, skipping intervention.")
+                return false
+            }
+        }
+
         val thresholdMinutes = prefs.getInt("thresholdMinutes", 20)
         
         // 0 thresholdMinutes represents the 10-second testing mode

@@ -4,17 +4,41 @@ import 'package:flutter/foundation.dart';
 class NativeMonitoringService {
   static const MethodChannel _channel = MethodChannel('doomscroll_guard/channel');
 
-  Future<void> startService(List<String> targetApps, int thresholdMinutes) async {
+  Future<void> startService({
+    required List<String> targetApps,
+    required int thresholdMinutes,
+    required List<String> whitelistApps,
+    required int quietHoursStartMinutes,
+    required int quietHoursEndMinutes,
+  }) async {
     try {
-      await _channel.invokeMethod('startService', {'targetApps': targetApps, 'thresholdMinutes': thresholdMinutes});
+      await _channel.invokeMethod('startService', {
+        'targetApps': targetApps,
+        'thresholdMinutes': thresholdMinutes,
+        'whitelistApps': whitelistApps,
+        'quietHoursStartMinutes': quietHoursStartMinutes,
+        'quietHoursEndMinutes': quietHoursEndMinutes,
+      });
     } catch (e) {
       debugPrint("Error starting service: $e");
     }
   }
 
-  Future<void> updateServiceConfig(List<String> targetApps, int thresholdMinutes) async {
+  Future<void> updateServiceConfig({
+    required List<String> targetApps,
+    required int thresholdMinutes,
+    required List<String> whitelistApps,
+    required int quietHoursStartMinutes,
+    required int quietHoursEndMinutes,
+  }) async {
     try {
-      await _channel.invokeMethod('updateServiceConfig', {'targetApps': targetApps, 'thresholdMinutes': thresholdMinutes});
+      await _channel.invokeMethod('updateServiceConfig', {
+        'targetApps': targetApps,
+        'thresholdMinutes': thresholdMinutes,
+        'whitelistApps': whitelistApps,
+        'quietHoursStartMinutes': quietHoursStartMinutes,
+        'quietHoursEndMinutes': quietHoursEndMinutes,
+      });
     } catch (e) {
       debugPrint("Error updating service config: $e");
     }
