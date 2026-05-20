@@ -598,23 +598,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Row(
-                          children: [
-                            Icon(
-                              Icons.nights_stay_rounded,
-                              color: AppColors.primaryAccent,
-                              size: 22,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Jam Tenang (Quiet Hours)',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                        const Expanded(
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.nights_stay_rounded,
+                                color: AppColors.primaryAccent,
+                                size: 22,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Jam Tenang (Quiet Hours)',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         Switch(
                           value: _settings!.quietHoursStartMinutes != -1,
