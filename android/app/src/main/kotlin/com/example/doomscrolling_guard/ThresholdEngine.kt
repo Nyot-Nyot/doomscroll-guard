@@ -5,6 +5,10 @@ import android.util.Log
 
 object ThresholdEngine {
     fun checkUsage(context: Context, packageName: String): Boolean {
+        if (MonitoringService.isPaused) {
+            Log.i("DoomscrollGuard", "ThresholdEngine: Monitoring is paused, skipping checks.")
+            return false
+        }
         if (SessionManager.isSnoozed()) {
             Log.i("DoomscrollGuard", "ThresholdEngine: Monitoring is snoozed, skipping checks.")
             return false

@@ -52,13 +52,28 @@ class NativeMonitoringService {
     }
   }
   
+  Future<void> setMonitoringPaused(bool isPaused) async {
+    try {
+      await _channel.invokeMethod('setMonitoringPaused', {'isPaused': isPaused});
+    } catch (e) {
+      debugPrint("Error pausing service: $e");
+    }
+  }
+  
   Future<Map<String, dynamic>> getMonitoringState() async {
     try {
       final Map<dynamic, dynamic>? result = await _channel.invokeMethod('getMonitoringState');
       if (result == null) return {'isRunning': false, 'warningCount': 0};
       return {
         'isRunning': result['isRunning'] ?? false,
+        'isPaused': result['isPaused'] ?? false,
         'warningCount': result['warningCount'] ?? 0,
+        'longestSession': result['longestSession'] ?? 0,
+        'activeSessions': result['activeSessions'] ?? {},
+        'isQuietHoursActive': result['isQuietHoursActive'] ?? false,
+        'quietHoursStart': result['quietHoursStart'] ?? -1,
+        'quietHoursEnd': result['quietHoursEnd'] ?? -1,
+        'whitelistApps': result['whitelistApps'] ?? [],
       };
     } catch (e) {
       debugPrint("Error getting state: $e");
