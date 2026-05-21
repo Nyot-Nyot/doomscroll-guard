@@ -352,13 +352,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ? Colors.white
                               : (_isPaused
                                     ? Colors.white
-                                    : AppColors.textPrimary),
+                                    : AppColors.primaryAccent),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                             side: _isRunning && !_isPaused
                                 ? BorderSide(
-                                    color: AppColors.surface.withOpacity(0.8),
+                                    color: AppColors.primaryAccent.withOpacity(
+                                      0.24,
+                                    ),
                                     width: 1.5,
                                   )
                                 : BorderSide.none,
@@ -613,6 +615,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     final themeColor = accentColor ?? AppColors.primaryAccent;
     return Container(
+      constraints: const BoxConstraints(minHeight: 132),
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
       decoration: BoxDecoration(
         color: AppColors.surface,

@@ -78,7 +78,7 @@ class OverlayService : Service() {
 
         // 4. Card Description
         val descText = TextView(this).apply {
-            text = "Take a short break before continuing."
+            text = "A short break helps your eyes and mind feel clearer."
             setTextColor(Color.parseColor("#6E6A63")) // Warm Gray
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
             gravity = Gravity.CENTER

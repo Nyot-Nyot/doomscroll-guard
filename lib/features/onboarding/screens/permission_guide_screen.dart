@@ -12,7 +12,8 @@ class PermissionGuideScreen extends StatefulWidget {
   State<PermissionGuideScreen> createState() => _PermissionGuideScreenState();
 }
 
-class _PermissionGuideScreenState extends State<PermissionGuideScreen> with WidgetsBindingObserver {
+class _PermissionGuideScreenState extends State<PermissionGuideScreen>
+    with WidgetsBindingObserver {
   final NativePermissionService _permissionService = NativePermissionService();
 
   final Map<String, bool> _permissionStatus = {
@@ -48,7 +49,7 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> with Widg
       setState(() {
         _permissionStatus.addAll(status);
       });
-      
+
       final state = PermissionState(
         accessibilityGranted: status['accessibility'] ?? false,
         usageAccessGranted: status['usage'] ?? false,
@@ -85,7 +86,7 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> with Widg
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Setup Permissions'),
+        title: const Text('Atur Izin'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -98,12 +99,12 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> with Widg
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Help us protect your time',
+                'Bantu kami melindungi waktu layar Anda',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 8),
               Text(
-                'Doomscroll Guard needs these permissions to monitor usage and gently intervene when needed. We don\'t collect your personal data.',
+                'Doomscroll Guard membutuhkan izin ini untuk memantau penggunaan dan memberikan pengingat lembut. Semua data tetap berada pada perangkat Anda.',
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: 32),
@@ -113,25 +114,29 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> with Widg
                     _buildPermissionItem(
                       icon: Icons.accessibility_new_rounded,
                       title: 'Accessibility Service',
-                      description: 'Required to detect when you open target apps.',
+                      description:
+                          'Required to detect when you open target apps.',
                       key: 'accessibility',
                     ),
                     _buildPermissionItem(
                       icon: Icons.analytics_outlined,
                       title: 'Usage Access',
-                      description: 'Required to measure your screen time accurately.',
+                      description:
+                          'Required to measure your screen time accurately.',
                       key: 'usage',
                     ),
                     _buildPermissionItem(
                       icon: Icons.layers_outlined,
                       title: 'Display over other apps',
-                      description: 'Required to show gentle reminders on screen.',
+                      description:
+                          'Required to show gentle reminders on screen.',
                       key: 'overlay',
                     ),
                     _buildPermissionItem(
                       icon: Icons.battery_charging_full_rounded,
                       title: 'Battery Optimization',
-                      description: 'Ensure our worker isn\'t killed by the system.',
+                      description:
+                          'Ensure our worker isn\'t killed by the system.',
                       key: 'battery',
                     ),
                   ],
@@ -141,17 +146,22 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> with Widg
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _allGranted ? () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => const AppPickerScreen(),
-                      ),
-                    );
-                  } : null,
+                  onPressed: _allGranted
+                      ? () {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (_) => const AppPickerScreen(),
+                            ),
+                          );
+                        }
+                      : null,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                  child: const Text('Finish Setup'),
+                  child: const Text('Selesai'),
                 ),
               ),
             ],
@@ -194,9 +204,9 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> with Widg
         ),
         title: Text(
           title,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4.0),
@@ -206,7 +216,7 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen> with Widg
             ? const Icon(Icons.check_circle, color: AppColors.primaryAccent)
             : TextButton(
                 onPressed: () => _requestPermission(key),
-                child: const Text('Grant'),
+                child: const Text('Izinkan'),
               ),
       ),
     );
