@@ -38,33 +38,20 @@ class MonitoringAccessibilityService : AccessibilityService() {
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val packageName = event.packageName?.toString() ?: return
             
-            // Prevent infinite debounce delay if the same app spams window state changes
-            if (packageName == lastSeenPackage) {
+            val prefs = getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
+            val targetApps = prefs.getStringSet("targetApps", emptySet()) ?: emptySet()
+            
+            if (packageName == this.packageName) {
+                // Ignore our own package (app or overlay window) to prevent disrupting active tracking session
                 return
             }
-            lastSeenPackage = packageName
             
-            debounceRunnable?.let { handler.removeCallbacks(it) }
-            
-            debounceRunnable = Runnable {
-                val prefs = getSharedPreferences("doomscroll_prefs", Context.MODE_PRIVATE)
-                val targetApps = prefs.getStringSet("targetApps", emptySet()) ?: emptySet()
-                
-                if (packageName == this.packageName) {
-                    // Ignore our own package (app or overlay window) to prevent disrupting active tracking session
-                    return@Runnable
-                }
-                
-                if (targetApps.contains(packageName)) {
-                    Log.i("DoomscrollGuard", "DSG Monitoring: Opened $packageName")
-                    SessionManager.onAppOpened(this, packageName)
-                } else {
-                    SessionManager.onAppClosed(this)
-                }
+            if (targetApps.contains(packageName)) {
+                Log.i("DoomscrollGuard", "DSG Monitoring: Opened $packageName")
+                SessionManager.onAppOpened(this, packageName)
+            } else {
+                SessionManager.onAppClosed(this)
             }
-            
-            // 300ms debounce to handle fast app switching
-            handler.postDelayed(debounceRunnable!!, 300L)
         }
     }
 
