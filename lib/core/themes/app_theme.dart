@@ -3,6 +3,8 @@ import 'app_colors.dart';
 
 class AppTheme {
   static const String _fontFamily = 'Inter';
+  static const double _radiusLarge = 22;
+  static const double _radiusButton = 16;
 
   static ThemeData get lightTheme {
     const baseTextTheme = TextTheme(
@@ -30,6 +32,12 @@ class AppTheme {
         fontSize: 16,
         height: 1.3,
       ),
+      headlineSmall: TextStyle(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w600,
+        fontSize: 18,
+        height: 1.25,
+      ),
       bodyLarge: TextStyle(
         color: AppColors.textPrimary,
         fontWeight: FontWeight.w400,
@@ -40,6 +48,12 @@ class AppTheme {
         color: AppColors.textSecondary,
         fontWeight: FontWeight.w400,
         fontSize: 14,
+        height: 1.45,
+      ),
+      bodySmall: TextStyle(
+        color: AppColors.textSecondary,
+        fontWeight: FontWeight.w400,
+        fontSize: 13,
         height: 1.45,
       ),
       labelLarge: TextStyle(
@@ -99,7 +113,7 @@ class AppTheme {
           elevation: 0,
           minimumSize: const Size(44, 48),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(_radiusButton),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           textStyle: baseTextTheme.labelLarge,
@@ -111,7 +125,7 @@ class AppTheme {
           minimumSize: const Size(44, 48),
           side: const BorderSide(color: AppColors.outline),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(_radiusButton),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           textStyle: baseTextTheme.labelLarge?.copyWith(
@@ -130,9 +144,26 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,
-        elevation: 0,
+        elevation: 1,
+        shadowColor: AppColors.softShadow,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_radiusLarge),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titleTextStyle: baseTextTheme.titleLarge,
+        contentTextStyle: baseTextTheme.bodyLarge,
+        elevation: 0,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: AppColors.surface,
+        modalBackgroundColor: AppColors.background,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
@@ -157,15 +188,15 @@ class AppTheme {
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(_radiusButton),
           borderSide: const BorderSide(color: AppColors.outline),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(_radiusButton),
           borderSide: const BorderSide(color: AppColors.outline),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(_radiusButton),
           borderSide: const BorderSide(
             color: AppColors.primaryAccent,
             width: 1.5,
