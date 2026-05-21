@@ -1,6 +1,7 @@
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:doomscrolling_guard/core/themes/app_theme.dart';
 import 'package:doomscrolling_guard/features/onboarding/screens/onboarding_screen.dart';
 import 'package:doomscrolling_guard/features/onboarding/screens/app_picker_screen.dart';
@@ -8,6 +9,9 @@ import 'package:doomscrolling_guard/features/dashboard/screens/main_navigation_s
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
+  );
   bool permissionsCompleted = false;
   bool targetAppsCompleted = false;
 
