@@ -99,44 +99,49 @@ class _PermissionGuideScreenState extends State<PermissionGuideScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Bantu kami melindungi waktu layar Anda',
+                'Pengaturan Izin',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 8),
               Text(
-                'Doomscroll Guard membutuhkan izin ini untuk memantau penggunaan dan memberikan pengingat lembut. Semua data tetap berada pada perangkat Anda.',
+                'Langkah ini membantu Doomscroll Guard berjalan lancar tanpa mengganggu aktivitas Anda. Semua data tetap tersimpan di perangkat.',
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+              Text(
+                'Silakan beri izin satu per satu. Setelah semua langkah selesai, Anda bisa memilih aplikasi yang ingin dipantau.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
               Expanded(
                 child: ListView(
                   children: [
                     _buildPermissionItem(
                       icon: Icons.accessibility_new_rounded,
-                      title: 'Accessibility Service',
+                      title: 'Akses Accessibility',
                       description:
-                          'Required to detect when you open target apps.',
+                          'Izinkan untuk mendeteksi saat aplikasi target dibuka dan menampilkan pengingat tepat waktu.',
                       key: 'accessibility',
                     ),
                     _buildPermissionItem(
                       icon: Icons.analytics_outlined,
-                      title: 'Usage Access',
+                      title: 'Akses Penggunaan',
                       description:
-                          'Required to measure your screen time accurately.',
+                          'Izinkan agar Doomscroll Guard dapat membaca durasi penggunaan layar dan membuat ringkasan yang akurat.',
                       key: 'usage',
                     ),
                     _buildPermissionItem(
                       icon: Icons.layers_outlined,
-                      title: 'Display over other apps',
+                      title: 'Tampilkan di atas aplikasi lain',
                       description:
-                          'Required to show gentle reminders on screen.',
+                          'Izinkan agar pengingat ringan dapat muncul saat Anda sedang scrolling.',
                       key: 'overlay',
                     ),
                     _buildPermissionItem(
                       icon: Icons.battery_charging_full_rounded,
-                      title: 'Battery Optimization',
+                      title: 'Optimasi Baterai',
                       description:
-                          'Ensure our worker isn\'t killed by the system.',
+                          'Abaikan optimasi baterai supaya layanan monitoring tetap berjalan di latar belakang.',
                       key: 'battery',
                     ),
                   ],

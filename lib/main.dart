@@ -1,13 +1,17 @@
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
+import 'package:doomscrolling_guard/core/themes/app_theme.dart';
+import 'package:doomscrolling_guard/features/dashboard/screens/main_navigation_shell.dart';
+import 'package:doomscrolling_guard/features/onboarding/screens/app_picker_screen.dart';
+import 'package:doomscrolling_guard/features/onboarding/screens/onboarding_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:doomscrolling_guard/core/themes/app_theme.dart';
-import 'package:doomscrolling_guard/features/onboarding/screens/onboarding_screen.dart';
-import 'package:doomscrolling_guard/features/onboarding/screens/app_picker_screen.dart';
-import 'package:doomscrolling_guard/features/dashboard/screens/main_navigation_shell.dart';
+import 'package:flutter/services.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
+  );
   bool permissionsCompleted = false;
   bool targetAppsCompleted = false;
 
@@ -18,26 +22,29 @@ Future<void> main() async {
     }
     final perms = LocalStorageService().getPermissionState();
     if (perms != null) {
-      permissionsCompleted = perms.accessibilityGranted &&
+      permissionsCompleted =
+          perms.accessibilityGranted &&
           perms.usageAccessGranted &&
           perms.overlayGranted &&
           perms.batteryOptimizationIgnored;
     }
-    
+
     final settings = LocalStorageService().getSettings();
     if (settings != null && settings.targetApps.isNotEmpty) {
       targetAppsCompleted = true;
     }
-    
+
     debugPrint("Hive initialized successfully.");
   } catch (e, st) {
     debugPrint("Error initializing Hive: $e\n$st");
   }
 
-  runApp(MyApp(
-    permissionsCompleted: permissionsCompleted,
-    targetAppsCompleted: targetAppsCompleted,
-  ));
+  runApp(
+    MyApp(
+      permissionsCompleted: permissionsCompleted,
+      targetAppsCompleted: targetAppsCompleted,
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -57,8 +64,8 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       home: permissionsCompleted
           ? (targetAppsCompleted
-              ? const MainNavigationShell()
-              : const AppPickerScreen())
+                ? const MainNavigationShell()
+                : const AppPickerScreen())
           : const OnboardingScreen(),
     );
   }
