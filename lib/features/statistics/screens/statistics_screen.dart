@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
 import 'package:doomscrolling_guard/core/services/native_monitoring_service.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
 import 'package:doomscrolling_guard/shared/models/daily_usage.dart';
+import 'package:flutter/material.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});

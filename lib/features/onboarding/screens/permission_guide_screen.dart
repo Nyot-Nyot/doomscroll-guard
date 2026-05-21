@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:doomscrolling_guard/core/themes/app_colors.dart';
-import 'package:doomscrolling_guard/core/services/native_permission_service.dart';
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
-import 'package:doomscrolling_guard/shared/models/permission_state.dart';
+import 'package:doomscrolling_guard/core/services/native_permission_service.dart';
+import 'package:doomscrolling_guard/core/themes/app_colors.dart';
 import 'package:doomscrolling_guard/features/onboarding/screens/app_picker_screen.dart';
+import 'package:doomscrolling_guard/shared/models/permission_state.dart';
+import 'package:flutter/material.dart';
 
 class PermissionGuideScreen extends StatefulWidget {
   const PermissionGuideScreen({super.key});

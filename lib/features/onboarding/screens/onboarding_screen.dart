@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
 import 'package:doomscrolling_guard/features/onboarding/screens/permission_guide_screen.dart';
+import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

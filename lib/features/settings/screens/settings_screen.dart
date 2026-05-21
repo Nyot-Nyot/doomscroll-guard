@@ -1,10 +1,11 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/services/native_monitoring_service.dart';
-import '../../../../shared/models/settings.dart';
 import '../../../../core/themes/app_colors.dart';
+import '../../../../shared/models/settings.dart';
 import '../widgets/app_picker_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
