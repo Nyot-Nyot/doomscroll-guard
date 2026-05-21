@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../shared/models/daily_usage.dart';
@@ -71,7 +72,14 @@ class LocalStorageService {
     await saveDailyUsage(todayKey(), usage);
   }
 
-  Future<void> syncNativeUsage(Map<String, int> nativeStats, int warningCount) async {
+  Future<DailyUsage?> getTodayUsage() async {
+    return _dailyUsageBox.get(todayKey());
+  }
+
+  Future<void> syncNativeUsage(
+    Map<String, int> nativeStats,
+    int warningCount,
+  ) async {
     final Map<String, int> usageSecondsByApp = {};
     for (final entry in nativeStats.entries) {
       // Native stats are in milliseconds, Hive expects seconds
@@ -83,6 +91,14 @@ class LocalStorageService {
       usageSecondsByApp: usageSecondsByApp,
       warningCount: warningCount,
     );
+
+    final currentUsage = await getTodayUsage();
+    if (currentUsage != null &&
+        currentUsage.warningCount == warningCount &&
+        mapEquals(currentUsage.usageSecondsByApp, usageSecondsByApp)) {
+      return;
+    }
+
     await saveTodayUsage(todayUsage);
   }
 

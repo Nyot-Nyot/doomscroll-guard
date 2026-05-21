@@ -21,6 +21,21 @@ class OverlayService : Service() {
     private var windowManager: WindowManager? = null
     private var overlayView: View? = null
 
+    private companion object {
+        private const val SNOOZE_MINUTES = 10
+        private const val GRACE_PERIOD_MINUTES = 5
+
+        private const val OVERLAY_DIM_COLOR = "#801F1D1A"
+        private const val CARD_BG_COLOR = "#F6F4EF"
+        private const val TITLE_TEXT_COLOR = "#2B2B2B"
+        private const val BODY_TEXT_COLOR = "#6E6A63"
+        private const val BREAK_BUTTON_BG_COLOR = "#6B705C"
+        private const val SNOOZE_BUTTON_BG_COLOR = "#CB997E"
+        private const val ACTION_TEXT_COLOR = "#FFFFFF"
+        private const val DISMISS_BUTTON_BG_COLOR = "#ECE7DE"
+        private const val DISMISS_TEXT_COLOR = "#6E6A63"
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -41,7 +56,7 @@ class OverlayService : Service() {
                     orientation = LinearLayout.VERTICAL
                     gravity = Gravity.CENTER
                     setBackgroundColor(
-                            Color.parseColor("#801F1D1A")
+                            Color.parseColor(OVERLAY_DIM_COLOR)
                     ) // 50% dimmed warm dark background
                 }
 
@@ -56,7 +71,7 @@ class OverlayService : Service() {
                     background =
                             GradientDrawable().apply {
                                 shape = GradientDrawable.RECTANGLE
-                                setColor(Color.parseColor("#F6F4EF")) // Warm Off White
+                                setColor(Color.parseColor(CARD_BG_COLOR)) // Warm Off White
                                 cornerRadius = 24 * density
                             }
                 }
@@ -69,8 +84,8 @@ class OverlayService : Service() {
         // 3. Card Title
         val titleText =
                 TextView(this).apply {
-                    text = "You've been scrolling for a while"
-                    setTextColor(Color.parseColor("#2B2B2B")) // Deep Charcoal
+                    text = "Kamu sudah menggulir cukup lama"
+                    setTextColor(Color.parseColor(TITLE_TEXT_COLOR)) // Deep Charcoal
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
                     gravity = Gravity.CENTER
                     setTypeface(null, android.graphics.Typeface.BOLD)
@@ -86,8 +101,8 @@ class OverlayService : Service() {
         // 4. Card Description
         val descText =
                 TextView(this).apply {
-                    text = "A short break helps your eyes and mind feel clearer."
-                    setTextColor(Color.parseColor("#6E6A63")) // Warm Gray
+                    text = "Istirahat singkat membantu mata dan pikiran menjadi lebih segar."
+                    setTextColor(Color.parseColor(BODY_TEXT_COLOR)) // Warm Gray
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
                     gravity = Gravity.CENTER
                 }
@@ -121,10 +136,10 @@ class OverlayService : Service() {
             }
         }
 
-        // 6. Action Button: Take a Break
+        // 6. Action Button: Istirahat
         val breakBtn =
-                createStyledButton("Take a Break", "#6B705C", "#FFFFFF") {
-                    Log.i("DoomscrollGuard", "OverlayService: Take a Break clicked")
+                createStyledButton("Istirahat", BREAK_BUTTON_BG_COLOR, ACTION_TEXT_COLOR) {
+                    Log.i("DoomscrollGuard", "OverlayService: Istirahat clicked")
                     val homeIntent =
                             Intent(Intent.ACTION_MAIN).apply {
                                 addCategory(Intent.CATEGORY_HOME)
@@ -142,31 +157,31 @@ class OverlayService : Service() {
                         .apply { bottomMargin = (12 * density).toInt() }
         cardLayout.addView(breakBtn, btnParams)
 
-        // 7. Action Button: Snooze
+        // 7. Action Button: Tunda
         val snoozeBtn =
-                createStyledButton("Snooze (10m)", "#CB997E", "#FFFFFF") {
-                    Log.i("DoomscrollGuard", "OverlayService: Snooze clicked")
-                    SessionManager.snooze(10)
+                createStyledButton("Tunda (10m)", SNOOZE_BUTTON_BG_COLOR, ACTION_TEXT_COLOR) {
+                    Log.i("DoomscrollGuard", "OverlayService: Tunda clicked")
+                    SessionManager.snooze(SNOOZE_MINUTES)
                     stopSelf()
                 }
         cardLayout.addView(snoozeBtn, btnParams)
 
-        // 8. Action Button: Continue Anyway / Dismiss
+        // 8. Action Button: Lanjutkan saja
         val dismissBtn =
                 Button(this).apply {
-                    text = "Continue anyway"
+                    text = "Lanjutkan saja"
                     isAllCaps = false
-                    setTextColor(Color.parseColor("#6E6A63")) // Warm Gray
+                    setTextColor(Color.parseColor(DISMISS_TEXT_COLOR)) // Warm Gray
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
                     background =
                             GradientDrawable().apply {
                                 shape = GradientDrawable.RECTANGLE
-                                setColor(Color.parseColor("#ECE7DE")) // Soft Sand
+                                setColor(Color.parseColor(DISMISS_BUTTON_BG_COLOR)) // Soft Sand
                                 cornerRadius = 14 * density
                             }
                     setOnClickListener {
                         Log.i("DoomscrollGuard", "OverlayService: Dismiss clicked")
-                        SessionManager.grantGracePeriod(5)
+                        SessionManager.grantGracePeriod(GRACE_PERIOD_MINUTES)
                         stopSelf()
                     }
                 }
