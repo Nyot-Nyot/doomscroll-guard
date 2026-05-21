@@ -12,6 +12,7 @@ class MonitoringAccessibilityService : AccessibilityService() {
 
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private var debounceRunnable: Runnable? = null
+    private var lastSeenPackage: String? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -27,6 +28,7 @@ class MonitoringAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         isServiceConnected = false
+        lastSeenPackage = null
         super.onDestroy()
     }
 
@@ -35,6 +37,12 @@ class MonitoringAccessibilityService : AccessibilityService() {
 
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val packageName = event.packageName?.toString() ?: return
+            
+            // Prevent infinite debounce delay if the same app spams window state changes
+            if (packageName == lastSeenPackage) {
+                return
+            }
+            lastSeenPackage = packageName
             
             debounceRunnable?.let { handler.removeCallbacks(it) }
             
