@@ -143,7 +143,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   bool get _hasUsageData {
-    return _usageStats.isNotEmpty || _warningCount > 0 || _longestSessionMs > 0;
+    final hasNonZeroUsage = _usageStats.values.any((value) => value > 0);
+    return hasNonZeroUsage || _warningCount > 0 || _longestSessionMs > 0;
   }
 
   @override
