@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:doomscrolling_guard/core/services/native_monitoring_service.dart';
+import 'dart:typed_data';
+
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
+import 'package:doomscrolling_guard/core/services/native_monitoring_service.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
+import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -19,7 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, int> _usageStats = {};
   Timer? _timer;
   Map<String, String> _appNamesMap = {};
-  Map<String, String> _appIconsMap = {};
+  Map<String, Uint8List> _appIconBytesMap = {};
   Map<String, int> _activeSessions = {};
   bool _isQuietHoursActive = false;
   int _quietHoursStart = -1;
@@ -38,20 +40,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final apps = await NativeMonitoringService().getInstalledApps();
       final Map<String, String> appNames = {};
-      final Map<String, String> appIcons = {};
+      final Map<String, Uint8List> appIconBytes = {};
       for (final app in apps) {
         final pkg = app['packageName'];
         final name = app['appName'];
         final icon = app['appIcon'];
         if (pkg != null) {
           if (name != null) appNames[pkg] = name;
-          if (icon != null) appIcons[pkg] = icon;
+          if (icon != null) {
+            try {
+              appIconBytes[pkg] = base64Decode(icon);
+            } catch (_) {
+              // ignore malformed icon data
+            }
+          }
         }
       }
       if (mounted) {
         setState(() {
           _appNamesMap = appNames;
-          _appIconsMap = appIcons;
+          _appIconBytesMap = appIconBytes;
         });
       }
     } catch (e) {
@@ -92,7 +100,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final quietHoursStart = state['quietHoursStart'] ?? -1;
     final quietHoursEnd = state['quietHoursEnd'] ?? -1;
     final whitelistAppsRaw = state['whitelistApps'] as List?;
-    final List<String> whitelistApps = whitelistAppsRaw?.map((e) => e.toString()).toList() ?? [];
+    final List<String> whitelistApps =
+        whitelistAppsRaw?.map((e) => e.toString()).toList() ?? [];
 
     await LocalStorageService().syncNativeUsage(typedStats, warningCount);
 
@@ -136,8 +145,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = LocalStorageService().getSettings();
-    final targetApps = settings?.targetApps ?? [];
-    
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     // Calculate total usage today
     int totalUsageMs = 0;
     _usageStats.forEach((key, value) {
@@ -147,12 +157,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Doomscroll Guard',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          style: textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
-            fontSize: 22,
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -189,18 +198,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: _isRunning 
+                            color: _isRunning
                                 ? AppColors.primaryAccent.withOpacity(0.12)
                                 : Colors.grey.withOpacity(0.12),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            _isRunning 
-                                ? (_isPaused ? Icons.pause_circle_filled_rounded : Icons.shield_rounded) 
+                            _isRunning
+                                ? (_isPaused
+                                      ? Icons.pause_circle_filled_rounded
+                                      : Icons.shield_rounded)
                                 : Icons.shield_outlined,
                             size: 32,
-                            color: _isRunning 
-                                ? (_isPaused ? Colors.orange.shade700 : AppColors.primaryAccent) 
+                            color: _isRunning
+                                ? (_isPaused
+                                      ? Colors.orange.shade700
+                                      : AppColors.primaryAccent)
                                 : AppColors.textSecondary,
                           ),
                         ),
@@ -210,31 +223,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _isRunning 
-                                    ? (_isPaused ? 'Pemantauan Dijeda' : 'Sistem Aktif') 
+                                _isRunning
+                                    ? (_isPaused
+                                          ? 'Pemantauan Dijeda'
+                                          : 'Sistem Aktif')
                                     : 'Sistem Nonaktif',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
+                                style: textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 4),
                               Text(
-                                _isRunning 
-                                    ? (_isPaused ? 'Perlindungan layar sedang ditangguhkan.' : 'Memantau scrolling habits Anda secara real-time.') 
+                                _isRunning
+                                    ? (_isPaused
+                                          ? 'Perlindungan layar sedang ditangguhkan.'
+                                          : 'Memantau kebiasaan scrolling Anda secara real-time.')
                                     : 'Aktifkan pemantauan untuk menjaga kesehatan digital.',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                ),
+                                style: textTheme.bodyMedium,
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    if (_isRunning && ((_quietHoursStart != -1 && _quietHoursEnd != -1) || _whitelistApps.isNotEmpty)) ...[
+                    if (_isRunning &&
+                        ((_quietHoursStart != -1 && _quietHoursEnd != -1) ||
+                            _whitelistApps.isNotEmpty)) ...[
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
@@ -245,15 +259,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             if (_quietHoursStart != -1 && _quietHoursEnd != -1)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
                                   color: _isQuietHoursActive
-                                      ? const Color(0xFFFDF2E9) // Amber/Gold soft background
+                                      ? AppColors.secondaryAccent.withOpacity(
+                                          0.14,
+                                        )
                                       : AppColors.background,
                                   borderRadius: BorderRadius.circular(30),
                                   border: Border.all(
                                     color: _isQuietHoursActive
-                                        ? const Color(0xFFF5B041).withOpacity(0.5)
+                                        ? AppColors.secondaryAccent.withOpacity(
+                                            0.32,
+                                          )
                                         : AppColors.surface,
                                     width: 1,
                                   ),
@@ -262,19 +283,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      _isQuietHoursActive ? Icons.nights_stay_rounded : Icons.nights_stay_outlined,
+                                      _isQuietHoursActive
+                                          ? Icons.nights_stay_rounded
+                                          : Icons.nights_stay_outlined,
                                       size: 14,
-                                      color: _isQuietHoursActive ? const Color(0xFFD35400) : AppColors.textSecondary,
+                                      color: _isQuietHoursActive
+                                          ? AppColors.secondaryAccent
+                                          : AppColors.textSecondary,
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
                                       _isQuietHoursActive
                                           ? 'Jam Tenang Aktif'
                                           : 'Jam Tenang (${_formatMinutes(_quietHoursStart)} - ${_formatMinutes(_quietHoursEnd)})',
-                                      style: TextStyle(
-                                        fontSize: 12,
+                                      style: textTheme.bodySmall?.copyWith(
                                         fontWeight: FontWeight.w600,
-                                        color: _isQuietHoursActive ? const Color(0xFFD35400) : AppColors.textSecondary,
+                                        color: _isQuietHoursActive
+                                            ? AppColors.secondaryAccent
+                                            : AppColors.textSecondary,
                                       ),
                                     ),
                                   ],
@@ -282,30 +308,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             if (_whitelistApps.isNotEmpty)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFEBF5FB), // Blue soft background
+                                  color: AppColors.surfaceMuted.withOpacity(
+                                    0.4,
+                                  ),
                                   borderRadius: BorderRadius.circular(30),
                                   border: Border.all(
-                                    color: const Color(0xFF5DADE2).withOpacity(0.5),
+                                    color: AppColors.surface.withOpacity(0.7),
                                     width: 1,
                                   ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.star_rounded,
                                       size: 14,
-                                      color: Color(0xFF2980B9),
+                                      color: AppColors.secondaryAccent,
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
                                       '${_whitelistApps.length} Aplikasi Pengecualian',
-                                      style: const TextStyle(
-                                        fontSize: 12,
+                                      style: textTheme.bodySmall?.copyWith(
                                         fontWeight: FontWeight.w600,
-                                        color: Color(0xFF2980B9),
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                   ],
@@ -323,33 +353,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: !_isRunning
                               ? AppColors.primaryAccent
-                              : (_isPaused ? AppColors.primaryAccent : Colors.orange.shade50),
+                              : (_isPaused
+                                    ? AppColors.primaryAccent
+                                    : AppColors.surface),
                           foregroundColor: !_isRunning
                               ? Colors.white
-                              : (_isPaused ? Colors.white : Colors.orange.shade800),
+                              : (_isPaused
+                                    ? Colors.white
+                                    : AppColors.primaryAccent),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                             side: _isRunning && !_isPaused
-                                ? BorderSide(color: Colors.orange.shade200, width: 1.5)
+                                ? BorderSide(
+                                    color: AppColors.primaryAccent.withOpacity(
+                                      0.24,
+                                    ),
+                                    width: 1.5,
+                                  )
                                 : BorderSide.none,
                           ),
                         ),
                         onPressed: () async {
                           if (!_isRunning) {
-                            final settings = LocalStorageService().getSettings();
+                            final settings = LocalStorageService()
+                                .getSettings();
                             await NativeMonitoringService().startService(
                               targetApps: settings?.targetApps ?? [],
-                              thresholdMinutes: settings?.thresholdMinutes ?? 20,
+                              thresholdMinutes:
+                                  settings?.thresholdMinutes ?? 20,
                               whitelistApps: settings?.whitelistApps ?? [],
-                              quietHoursStartMinutes: settings?.quietHoursStartMinutes ?? -1,
-                              quietHoursEndMinutes: settings?.quietHoursEndMinutes ?? -1,
+                              quietHoursStartMinutes:
+                                  settings?.quietHoursStartMinutes ?? -1,
+                              quietHoursEndMinutes:
+                                  settings?.quietHoursEndMinutes ?? -1,
                             );
                           } else {
                             if (_isPaused) {
-                              await NativeMonitoringService().setMonitoringPaused(false);
+                              await NativeMonitoringService()
+                                  .setMonitoringPaused(false);
                             } else {
-                              await NativeMonitoringService().setMonitoringPaused(true);
+                              await NativeMonitoringService()
+                                  .setMonitoringPaused(true);
                             }
                           }
                           _fetchState(); // forcefully update state
@@ -359,7 +404,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             if (_isRunning) ...[
                               Icon(
-                                _isPaused ? Icons.play_circle_fill_rounded : Icons.pause_circle_filled_rounded,
+                                _isPaused
+                                    ? Icons.play_circle_fill_rounded
+                                    : Icons.pause_circle_filled_rounded,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -367,13 +414,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Text(
                               !_isRunning
                                   ? 'Mulai Pemantauan'
-                                  : (_isPaused ? 'Lanjutkan Pemantauan' : 'Jeda Pemantauan'),
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                  : (_isPaused
+                                        ? 'Lanjutkan Pemantauan'
+                                        : 'Jeda Pemantauan'),
+                              style: textTheme.labelLarge?.copyWith(
                                 color: !_isRunning
                                     ? Colors.white
-                                    : (_isPaused ? Colors.white : Colors.orange.shade800),
+                                    : (_isPaused
+                                          ? Colors.white
+                                          : AppColors.textPrimary),
                               ),
                             ),
                           ],
@@ -386,13 +435,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 32),
 
               // 2. Quick Stats Section
-              const Text(
+              Text(
                 'Ringkasan Hari Ini',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.2,
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 16),
@@ -433,26 +479,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Durasi Penggunaan Sesi Ini',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.2,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.secondaryAccent.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       'Batas: ${settings?.thresholdMinutes == 0 ? "10s" : "${settings?.thresholdMinutes ?? 20}m"}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                      style: textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
                         color: AppColors.secondaryAccent,
                       ),
                     ),
@@ -471,9 +516,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      _isPaused ? 'Pemantauan sedang dijeda.' : 'Belum ada aktivitas scrolling terdeteksi.',
-                      style: const TextStyle(
-                        fontSize: 13,
+                      _isPaused
+                          ? 'Pemantauan sedang dijeda.'
+                          : 'Belum ada aktivitas scrolling terdeteksi.',
+                      style: textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -516,17 +562,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   Text(
                                     appLabel,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                      color: AppColors.textPrimary,
+                                    style: textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     e.key,
-                                    style: const TextStyle(
-                                      fontSize: 11,
+                                    style: textTheme.bodySmall?.copyWith(
                                       color: AppColors.textSecondary,
                                     ),
                                     maxLines: 1,
@@ -538,11 +581,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const SizedBox(width: 8),
                             Text(
                               _formatDuration(e.value),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: isCloseToLimit 
-                                    ? AppColors.secondaryAccent 
+                              style: textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: isCloseToLimit
+                                    ? AppColors.secondaryAccent
                                     : AppColors.textPrimary,
                               ),
                             ),
@@ -556,8 +598,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             minHeight: 6,
                             backgroundColor: AppColors.background,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              isCloseToLimit 
-                                  ? AppColors.secondaryAccent 
+                              isCloseToLimit
+                                  ? AppColors.secondaryAccent
                                   : AppColors.primaryAccent,
                             ),
                           ),
@@ -581,6 +623,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     final themeColor = accentColor ?? AppColors.primaryAccent;
     return Container(
+      constraints: const BoxConstraints(minHeight: 132),
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -596,28 +639,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: themeColor,
-          ),
+          Icon(icon, size: 20, color: themeColor),
           const SizedBox(height: 14),
           Text(
             value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: AppColors.textPrimary,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -631,11 +667,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Fallbacks
     if (packageName == 'com.instagram.android') return 'Instagram';
     if (packageName == 'com.zhiliaoapp.musically') return 'TikTok';
-    
+
     final parts = packageName.split('.');
     if (parts.length >= 2) {
       final candidate = parts[parts.length - 2];
-      if (candidate.toLowerCase() != 'com' && candidate.toLowerCase() != 'android') {
+      if (candidate.toLowerCase() != 'com' &&
+          candidate.toLowerCase() != 'android') {
         return candidate[0].toUpperCase() + candidate.substring(1);
       }
     }
@@ -644,21 +681,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildAppIcon(String packageName) {
-    final base64Icon = _appIconsMap[packageName];
-    if (base64Icon != null && base64Icon.isNotEmpty) {
-      try {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.memory(
-            base64Decode(base64Icon),
-            width: 38,
-            height: 38,
-            fit: BoxFit.contain,
-          ),
-        );
-      } catch (e) {
-        // fallback
-      }
+    final iconBytes = _appIconBytesMap[packageName];
+    if (iconBytes != null && iconBytes.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.memory(
+          iconBytes,
+          width: 38,
+          height: 38,
+          fit: BoxFit.contain,
+          gaplessPlayback: true,
+        ),
+      );
     }
     final cleanName = _getCleanAppName(packageName);
     return Container(

@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="accessibility_service_description">Doomscroll Guard uses accessibility service to monitor when you are scrolling on target apps so it can help you take a break.</string>
+    <string name="accessibility_service_description">Doomscroll Guard menggunakan layanan aksesibilitas untuk memantau saat kamu menggulir di aplikasi target agar bisa membantu kamu istirahat.</string>
 </resources>

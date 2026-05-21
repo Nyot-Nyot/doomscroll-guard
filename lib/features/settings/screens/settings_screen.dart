@@ -1,10 +1,11 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/services/native_monitoring_service.dart';
-import '../../../../shared/models/settings.dart';
 import '../../../../core/themes/app_colors.dart';
+import '../../../../shared/models/settings.dart';
 import '../widgets/app_picker_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -142,6 +143,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     if (_settings == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
@@ -164,21 +168,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              const Text(
+              Text(
                 'Pengaturan Batas',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.8,
+                style: textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
+              const SizedBox(height: 8),
+              Text(
                 'Sesuaikan batas waktu dan aplikasi yang dipantau agar kebiasaan digital Anda tetap sehat.',
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.4,
+                style: textTheme.bodyLarge?.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -191,6 +190,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.textPrimary.withOpacity(0.04),
+                      blurRadius: 24,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,9 +292,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onChanged: (value) {
                             setState(() {
                               _isTestMode = value;
-                              final updatedMinutes = value ? 0 : _sliderValue.round();
+                              final updatedMinutes = value
+                                  ? 0
+                                  : _sliderValue.round();
                               _saveSettings(
-                                _settings!.copyWith(thresholdMinutes: updatedMinutes),
+                                _settings!.copyWith(
+                                  thresholdMinutes: updatedMinutes,
+                                ),
                               );
                             });
                           },
@@ -306,9 +316,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           SliderTheme(
                             data: SliderTheme.of(context).copyWith(
                               activeTrackColor: AppColors.primaryAccent,
-                              inactiveTrackColor: AppColors.surface.withOpacity(0.5),
+                              inactiveTrackColor: AppColors.surface.withOpacity(
+                                0.5,
+                              ),
                               thumbColor: AppColors.primaryAccent,
-                              overlayColor: AppColors.primaryAccent.withOpacity(0.12),
+                              overlayColor: AppColors.primaryAccent.withOpacity(
+                                0.12,
+                              ),
                               valueIndicatorColor: AppColors.primaryAccent,
                               trackHeight: 4,
                             ),
@@ -340,11 +354,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('1m', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                Text('15m', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                Text('30m', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                Text('45m', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                Text('60m', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                Text(
+                                  '1m',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                Text(
+                                  '15m',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                Text(
+                                  '30m',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                Text(
+                                  '45m',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                Text(
+                                  '60m',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -363,6 +407,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.textPrimary.withOpacity(0.04),
+                      blurRadius: 24,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,6 +528,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.textPrimary.withOpacity(0.04),
+                      blurRadius: 24,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,6 +649,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.textPrimary.withOpacity(0.04),
+                      blurRadius: 24,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -659,7 +724,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Expanded(
                             child: InkWell(
                               onTap: () async {
-                                final initialTime = _minutesToTime(_settings!.quietHoursStartMinutes);
+                                final initialTime = _minutesToTime(
+                                  _settings!.quietHoursStartMinutes,
+                                );
                                 final selected = await showTimePicker(
                                   context: context,
                                   initialTime: initialTime,
@@ -678,13 +745,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 );
                                 if (selected != null) {
                                   final updated = _settings!.copyWith(
-                                    quietHoursStartMinutes: _timeToMinutes(selected),
+                                    quietHoursStartMinutes: _timeToMinutes(
+                                      selected,
+                                    ),
                                   );
                                   _saveSettings(updated);
                                 }
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.background,
                                   borderRadius: BorderRadius.circular(12),
@@ -701,7 +773,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      _formatMinutes(_settings!.quietHoursStartMinutes),
+                                      _formatMinutes(
+                                        _settings!.quietHoursStartMinutes,
+                                      ),
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -717,7 +791,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Expanded(
                             child: InkWell(
                               onTap: () async {
-                                final initialTime = _minutesToTime(_settings!.quietHoursEndMinutes);
+                                final initialTime = _minutesToTime(
+                                  _settings!.quietHoursEndMinutes,
+                                );
                                 final selected = await showTimePicker(
                                   context: context,
                                   initialTime: initialTime,
@@ -736,13 +812,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 );
                                 if (selected != null) {
                                   final updated = _settings!.copyWith(
-                                    quietHoursEndMinutes: _timeToMinutes(selected),
+                                    quietHoursEndMinutes: _timeToMinutes(
+                                      selected,
+                                    ),
                                   );
                                   _saveSettings(updated);
                                 }
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.background,
                                   borderRadius: BorderRadius.circular(12),
@@ -759,7 +840,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      _formatMinutes(_settings!.quietHoursEndMinutes),
+                                      _formatMinutes(
+                                        _settings!.quietHoursEndMinutes,
+                                      ),
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -778,7 +861,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              
+
               // Card 5: Emergency Disable
               Container(
                 width: double.infinity,
@@ -835,7 +918,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: const Text('Layanan pemantauan telah dihentikan.'),
+                                content: const Text(
+                                  'Layanan pemantauan telah dihentikan.',
+                                ),
                                 backgroundColor: Colors.red.shade700,
                               ),
                             );
@@ -867,11 +952,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Fallbacks
     if (packageName == 'com.instagram.android') return 'Instagram';
     if (packageName == 'com.zhiliaoapp.musically') return 'TikTok';
-    
+
     final parts = packageName.split('.');
     if (parts.length >= 2) {
       final candidate = parts[parts.length - 2];
-      if (candidate.toLowerCase() != 'com' && candidate.toLowerCase() != 'android') {
+      if (candidate.toLowerCase() != 'com' &&
+          candidate.toLowerCase() != 'android') {
         return candidate[0].toUpperCase() + candidate.substring(1);
       }
     }

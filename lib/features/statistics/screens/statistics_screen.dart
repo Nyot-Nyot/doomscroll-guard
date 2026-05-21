@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
 import 'package:doomscrolling_guard/core/services/native_monitoring_service.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
 import 'package:doomscrolling_guard/shared/models/daily_usage.dart';
+import 'package:flutter/material.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -50,7 +50,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       final state = await NativeMonitoringService().getMonitoringState();
       final warningCount = state['warningCount'] ?? 0;
       final stats = await NativeMonitoringService().getUsageStats();
-      
+
       final Map<String, int> typedStats = {};
       stats.forEach((key, value) {
         typedStats[key.toString()] = (value as num).toInt();
@@ -63,7 +63,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     final today = DateTime.now();
     _last7Days = List.generate(7, (index) {
-      return DateTime(today.year, today.month, today.day).subtract(Duration(days: index));
+      return DateTime(
+        today.year,
+        today.month,
+        today.day,
+      ).subtract(Duration(days: index));
     }).reversed.toList();
 
     final allUsage = LocalStorageService().getAllDailyUsage();
@@ -102,7 +106,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   String _getWeekdayLabel(DateTime date) {
     final today = DateTime.now();
-    if (date.year == today.year && date.month == today.month && date.day == today.day) {
+    if (date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day) {
       return "Hari Ini";
     }
     // Localized short weekday name
@@ -139,7 +145,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     }
 
     // Find the maximum daily total usage in the last 7 days to scale progress bars dynamically
-    int maxDailyTotalSeconds = 300; // minimum scale is 5 minutes (300 seconds) to prevent division by zero or super tiny bars
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    int maxDailyTotalSeconds =
+        300; // minimum scale is 5 minutes (300 seconds) to prevent division by zero or super tiny bars
     for (final usage in _dailyUsageHistory) {
       if (usage != null) {
         int dailySum = 0;
@@ -153,12 +162,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Statistik',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          style: textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
-            fontSize: 22,
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -185,20 +193,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Quiet Header Subtitle
-              const Text(
+              Text(
                 'Refleksi Mingguan',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
                   letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Menjaga kesadaran penuh akan kebiasaan layar tanpa rasa bersalah.',
-                style: TextStyle(
-                  fontSize: 13,
+                style: textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -222,11 +227,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'TOTAL SCREEN TIME HARI INI',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                      style: textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
                         color: AppColors.textSecondary,
                         letterSpacing: 0.8,
                       ),
@@ -234,10 +238,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     const SizedBox(height: 12),
                     Text(
                       _formatDuration(todayTotalSeconds),
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                      style: textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
                         letterSpacing: -1.0,
                       ),
                     ),
@@ -251,20 +253,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Aplikasi Teraktif',
-                                style: TextStyle(
-                                  fontSize: 12,
+                                style: textTheme.bodySmall?.copyWith(
                                   color: AppColors.textSecondary,
                                 ),
                               ),
                               const SizedBox(height: 6),
                               Text(
                                 topAppLabel,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: AppColors.textPrimary,
+                                style: textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -273,10 +272,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                 const SizedBox(height: 2),
                                 Text(
                                   _formatDuration(topAppSeconds),
-                                  style: const TextStyle(
-                                    fontSize: 12,
+                                  style: textTheme.bodySmall?.copyWith(
                                     color: AppColors.primaryAccent,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ],
@@ -308,16 +306,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                   Icon(
                                     Icons.notification_important_rounded,
                                     size: 20,
-                                    color: todayWarningCount > 0 
-                                        ? AppColors.secondaryAccent 
+                                    color: todayWarningCount > 0
+                                        ? AppColors.secondaryAccent
                                         : AppColors.primaryAccent,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     '$todayWarningCount Kali',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                                    style: textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
                                       color: AppColors.textPrimary,
                                     ),
                                   ),
@@ -334,13 +331,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               const SizedBox(height: 36),
 
               // 2. Weekly Trend Graph Section
-              const Text(
+              Text(
                 'Tren Penggunaan 7 Hari Terakhir',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.2,
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 20),
@@ -361,13 +355,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   children: List.generate(_last7Days.length, (index) {
                     final date = _last7Days[index];
                     final usage = _dailyUsageHistory[index];
-                    
+
                     int dailySum = 0;
                     if (usage != null) {
-                      usage.usageSecondsByApp.values.forEach((sec) => dailySum += sec);
+                      usage.usageSecondsByApp.values.forEach(
+                        (sec) => dailySum += sec,
+                      );
                     }
 
-                    final double progress = (dailySum / maxDailyTotalSeconds).clamp(0.0, 1.0);
+                    final double progress = (dailySum / maxDailyTotalSeconds)
+                        .clamp(0.0, 1.0);
                     final isToday = index == _last7Days.length - 1;
 
                     return Padding(
@@ -379,10 +376,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                             width: 75,
                             child: Text(
                               _getWeekdayLabel(date),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                                color: isToday ? AppColors.primaryAccent : AppColors.textPrimary,
+                              style: textTheme.bodySmall?.copyWith(
+                                fontWeight: isToday
+                                    ? FontWeight.w700
+                                    : FontWeight.w400,
+                                color: isToday
+                                    ? AppColors.primaryAccent
+                                    : AppColors.textPrimary,
                               ),
                             ),
                           ),
@@ -403,9 +403,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                   child: Container(
                                     height: 14,
                                     decoration: BoxDecoration(
-                                      color: isToday 
-                                          ? AppColors.primaryAccent 
-                                          : AppColors.primaryAccent.withOpacity(0.65),
+                                      color: isToday
+                                          ? AppColors.primaryAccent
+                                          : AppColors.primaryAccent.withOpacity(
+                                              0.65,
+                                            ),
                                       borderRadius: BorderRadius.circular(7),
                                     ),
                                   ),
@@ -419,9 +421,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                             width: 65,
                             child: Text(
                               _formatDuration(dailySum),
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                              style: textTheme.bodySmall?.copyWith(
+                                fontWeight: isToday
+                                    ? FontWeight.w700
+                                    : FontWeight.w400,
                                 color: AppColors.textPrimary,
                               ),
                               textAlign: TextAlign.end,
@@ -441,17 +444,23 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.primaryAccent.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.primaryAccent.withOpacity(0.12), width: 1),
+                  border: Border.all(
+                    color: AppColors.primaryAccent.withOpacity(0.12),
+                    width: 1,
+                  ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.spa_rounded, color: AppColors.primaryAccent, size: 24),
+                    const Icon(
+                      Icons.spa_rounded,
+                      color: AppColors.primaryAccent,
+                      size: 24,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Setiap kali Anda menaruh smartphone, Anda memberi ruang untuk kedamaian pikiran Anda.',
-                        style: TextStyle(
-                          fontSize: 12,
+                        style: textTheme.bodySmall?.copyWith(
                           fontStyle: FontStyle.italic,
                           color: AppColors.textPrimary,
                         ),
@@ -474,11 +483,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     // Fallbacks
     if (packageName == 'com.instagram.android') return 'Instagram';
     if (packageName == 'com.zhiliaoapp.musically') return 'TikTok';
-    
+
     final parts = packageName.split('.');
     if (parts.length >= 2) {
       final candidate = parts[parts.length - 2];
-      if (candidate.toLowerCase() != 'com' && candidate.toLowerCase() != 'android') {
+      if (candidate.toLowerCase() != 'com' &&
+          candidate.toLowerCase() != 'android') {
         return candidate[0].toUpperCase() + candidate.substring(1);
       }
     }

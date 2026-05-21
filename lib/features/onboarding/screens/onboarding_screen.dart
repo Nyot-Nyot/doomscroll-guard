@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
 import 'package:doomscrolling_guard/features/onboarding/screens/permission_guide_screen.dart';
+import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -15,16 +15,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, String>> _pages = [
     {
-      'title': 'Mindful Scrolling',
-      'body': 'Doomscroll Guard helps you stay aware of your digital habits without judging.',
+      'title': 'Scroll dengan Lebih Sadar',
+      'body':
+          'Doomscroll Guard membantu Anda melihat kebiasaan digital dengan tenang, bukan menghakimi.',
     },
     {
-      'title': 'Gentle Reminders',
-      'body': 'When you scroll too long, we will gently remind you to take a break or step away.',
+      'title': 'Pengingat Lembut',
+      'body':
+          'Saat Anda terlalu lama melihat layar, kami akan mengingatkan Anda untuk beristirahat sejenak.',
     },
     {
-      'title': 'You\'re in Control',
-      'body': 'Customize the limits or skip the reminders. This is your digital space.',
+      'title': 'Anda yang Mengatur',
+      'body':
+          'Sesuaikan batas dan pilih aplikasi yang ingin Anda pantau agar tetap nyaman.',
     },
   ];
 
@@ -72,19 +75,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       children: [
                         const Spacer(),
                         Container(
-                          height: 200,
+                          height: 220,
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: AppColors.surface,
                             borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.textPrimary.withOpacity(0.08),
+                                blurRadius: 24,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
                           ),
-                          child: const Icon(
-                            Icons.eco_rounded,
-                            size: 100,
-                            color: AppColors.primaryAccent,
+                          child: const Center(
+                            child: Icon(
+                              Icons.eco_rounded,
+                              size: 100,
+                              color: AppColors.primaryAccent,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 40),
                         Text(
                           _pages[index]['title']!,
                           style: Theme.of(context).textTheme.headlineMedium,
@@ -102,7 +114,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+                vertical: 24.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -126,10 +141,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ElevatedButton(
                     onPressed: _nextPage,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      backgroundColor: AppColors.primaryAccent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
                     ),
                     child: Text(
-                      _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                      _currentPage == _pages.length - 1
+                          ? 'Mulai'
+                          : 'Selanjutnya',
                     ),
                   ),
                 ],
