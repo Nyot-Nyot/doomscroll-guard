@@ -6,6 +6,32 @@ import android.content.Context
 import android.util.Log
 
 class MonitoringAccessibilityService : AccessibilityService() {
+    companion object {
+        var isServiceConnected = false
+    }
+
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var debounceRunnable: Runnable? = null
+    private var lastSeenPackage: String? = null
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        isServiceConnected = true
+        Log.i("DoomscrollGuard", "MonitoringAccessibilityService: Connected")
+    }
+
+    override fun onUnbind(intent: android.content.Intent?): Boolean {
+        isServiceConnected = false
+        Log.i("DoomscrollGuard", "MonitoringAccessibilityService: Unbound")
+        return super.onUnbind(intent)
+    }
+
+    override fun onDestroy() {
+        isServiceConnected = false
+        lastSeenPackage = null
+        super.onDestroy()
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 

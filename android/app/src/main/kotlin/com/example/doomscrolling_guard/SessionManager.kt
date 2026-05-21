@@ -18,20 +18,49 @@ object SessionManager {
         return calendar.timeInMillis
     }
 
-    fun onAppOpened(context: Context, packageName: String) {
-        if (currentSessionApp != packageName) {
-            if (currentSessionApp != null) {
-                onAppClosed(context, currentSessionApp!!)
-            }
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var closeRunnable: Runnable? = null
 
-            Log.i("DoomscrollGuard", "SessionManager: Started tracking $packageName")
-            currentSessionApp = packageName
-            sessionStartTime = System.currentTimeMillis()
+    fun onAppOpened(context: Context, packageName: String) {
+        if (currentSessionApp == packageName) {
+            closeRunnable?.let {
+                handler.removeCallbacks(it)
+                closeRunnable = null
+                Log.i("DoomscrollGuard", "SessionManager: Cancelled closing of $packageName (user returned quickly)")
+            }
+            return
         }
+
+        closeRunnable?.let {
+            handler.removeCallbacks(it)
+            it.run()
+            closeRunnable = null
+        }
+
+        if (currentSessionApp != null) {
+            forceCloseSession(context, currentSessionApp!!)
+        }
+
+        Log.i("DoomscrollGuard", "SessionManager: Started tracking $packageName")
+        currentSessionApp = packageName
+        sessionStartTime = System.currentTimeMillis()
     }
 
     fun onAppClosed(context: Context, packageName: String? = currentSessionApp) {
         if (packageName != null && currentSessionApp == packageName) {
+            closeRunnable?.let { handler.removeCallbacks(it) }
+            
+            // Delay actual closing by 1.5 seconds to handle popups, quick exits, or fast switching
+            closeRunnable = Runnable {
+                forceCloseSession(context, packageName)
+                closeRunnable = null
+            }
+            handler.postDelayed(closeRunnable!!, 1500L)
+        }
+    }
+
+    private fun forceCloseSession(context: Context, packageName: String) {
+        if (currentSessionApp == packageName) {
             val elapsedMs = System.currentTimeMillis() - sessionStartTime
             Log.i("DoomscrollGuard", "SessionManager: Ended tracking $packageName. Session lasted ${elapsedMs}ms")
             
@@ -172,6 +201,8 @@ object SessionManager {
     }
 
     fun resetSessionState() {
+        closeRunnable?.let { handler.removeCallbacks(it) }
+        closeRunnable = null
         currentSessionApp = null
         sessionStartTime = 0L
         snoozeUntil = 0L
