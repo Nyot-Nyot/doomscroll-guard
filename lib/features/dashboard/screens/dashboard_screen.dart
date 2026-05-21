@@ -142,6 +142,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return '$hourStr:$minuteStr';
   }
 
+  bool get _hasUsageData {
+    return _usageStats.isNotEmpty || _warningCount > 0 || _longestSessionMs > 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = LocalStorageService().getSettings();
@@ -442,6 +446,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              if (!_hasUsageData)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16.0),
+                  padding: const EdgeInsets.all(20.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppColors.surface, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Belum ada statistik hari ini',
+                        style: textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Mulai pemantauan atau buka aplikasi yang dipantau untuk melihat ringkasan waktu layar dan intervensi.',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               Row(
                 children: [
                   // Stat 1: Total Screen Time
