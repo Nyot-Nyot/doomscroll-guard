@@ -110,18 +110,10 @@ Dokumen ini berisi rencana implementasi realistis berdasarkan PRD, arsitektur, d
 3. Perbaiki tampilan popup agar terasa soft intervention.
 4. Review hierarchy dan readability di dashboard/statistics.
 
-### Major Task 3.2 - Enhanced Analytics
-
-1. Tambahkan ringkasan mingguan lebih detail.
-2. Tambahkan histori warning per hari.
-3. Tambahkan insight sederhana (misal: jam paling sering doomscroll).
-4. Tambahkan opsi reset data.
-
-### Major Task 3.3 - Onboarding & Guidance Improvements
+### Major Task 3.2 - Onboarding & Guidance Improvements
 
 1. Tambahkan microcopy yang lebih jelas di permission steps.
 2. Tambahkan empty states untuk statistik kosong.
-3. Tambahkan tips ringan di dashboard (optional).
 
 ---
 
