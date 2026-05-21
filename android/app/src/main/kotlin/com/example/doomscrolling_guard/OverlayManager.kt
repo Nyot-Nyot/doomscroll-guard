@@ -29,7 +29,12 @@ object OverlayManager {
             val intent = Intent(context, OverlayService::class.java).apply {
                 putExtra("target_package", packageName)
             }
-            context.startService(intent)
+            try {
+                context.startService(intent)
+            } catch (e: Exception) {
+                Log.e("DoomscrollGuard", "OverlayManager: Failed to start OverlayService. Triggering fallback.", e)
+                showFallbackNotification(context, packageName)
+            }
         } else {
             Log.w("DoomscrollGuard", "OverlayManager: Overlay permission missing! Triggering fallback notification.")
             showFallbackNotification(context, packageName)
