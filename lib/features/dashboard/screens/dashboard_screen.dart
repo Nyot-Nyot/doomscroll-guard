@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:doomscrolling_guard/core/services/native_monitoring_service.dart';
+import 'dart:typed_data';
+
 import 'package:doomscrolling_guard/core/services/local_storage_service.dart';
+import 'package:doomscrolling_guard/core/services/native_monitoring_service.dart';
 import 'package:doomscrolling_guard/core/themes/app_colors.dart';
+import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -19,7 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, int> _usageStats = {};
   Timer? _timer;
   Map<String, String> _appNamesMap = {};
-  Map<String, String> _appIconsMap = {};
+  Map<String, Uint8List> _appIconBytesMap = {};
   Map<String, int> _activeSessions = {};
   bool _isQuietHoursActive = false;
   int _quietHoursStart = -1;
@@ -38,20 +40,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final apps = await NativeMonitoringService().getInstalledApps();
       final Map<String, String> appNames = {};
-      final Map<String, String> appIcons = {};
+      final Map<String, Uint8List> appIconBytes = {};
       for (final app in apps) {
         final pkg = app['packageName'];
         final name = app['appName'];
         final icon = app['appIcon'];
         if (pkg != null) {
           if (name != null) appNames[pkg] = name;
-          if (icon != null) appIcons[pkg] = icon;
+          if (icon != null) {
+            try {
+              appIconBytes[pkg] = base64Decode(icon);
+            } catch (_) {
+              // ignore malformed icon data
+            }
+          }
         }
       }
       if (mounted) {
         setState(() {
           _appNamesMap = appNames;
-          _appIconsMap = appIcons;
+          _appIconBytesMap = appIconBytes;
         });
       }
     } catch (e) {
@@ -673,21 +681,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildAppIcon(String packageName) {
-    final base64Icon = _appIconsMap[packageName];
-    if (base64Icon != null && base64Icon.isNotEmpty) {
-      try {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.memory(
-            base64Decode(base64Icon),
-            width: 38,
-            height: 38,
-            fit: BoxFit.contain,
-          ),
-        );
-      } catch (e) {
-        // fallback
-      }
+    final iconBytes = _appIconBytesMap[packageName];
+    if (iconBytes != null && iconBytes.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.memory(
+          iconBytes,
+          width: 38,
+          height: 38,
+          fit: BoxFit.contain,
+          gaplessPlayback: true,
+        ),
+      );
     }
     final cleanName = _getCleanAppName(packageName);
     return Container(
